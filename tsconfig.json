@@ -22,10 +22,19 @@
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
-   "paths": {
+    "paths": {
       "@app/common": [
         "./libs/common/src"
       ]
     }
-  }
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/loans-bonding/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/api/tsconfig.app.json"
+    }
+  ]
 }
