@@ -7,6 +7,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
    "moduleNameMapper": {
-    "^@app/common$": "<rootDir>/../../../libs/common/src"
+    "^@app/common$": "<rootDir>/../../../libs/common/src",
+    "^@app/loans$": "<rootDir>/../../../libs/loans/src"
   }
 }

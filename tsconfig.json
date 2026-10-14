@@ -28,17 +28,11 @@
       ],
       "@app/loans": [
         "./libs/loans/src"
-      ],
-      "@app/loans/*": [
-        "./libs/loans/src/*"
       ]
     }
   },
   "files": [],
   "references": [
-    {
-      "path": "./apps/loans-bonding/tsconfig.app.json"
-    },
     {
       "path": "./apps/api/tsconfig.app.json"
     }
