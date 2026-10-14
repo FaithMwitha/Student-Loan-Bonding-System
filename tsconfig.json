@@ -25,6 +25,12 @@
     "paths": {
       "@app/common": [
         "./libs/common/src"
+      ],
+      "@app/loans": [
+        "./libs/loans/src"
+      ],
+      "@app/loans/*": [
+        "./libs/loans/src/*"
       ]
     }
   },
