@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
@@ -32,6 +33,7 @@
     }
   },
   "files": [],
+  "include":["apps/**/*", "libs/**/*"],
   "references": [
     {
       "path": "./apps/api/tsconfig.app.json"
