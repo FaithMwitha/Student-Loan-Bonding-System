@@ -28,6 +28,12 @@
       ],
       "@app/loans": [
         "./libs/loans/src"
+      ],
+      "@app/payments": [
+        "./libs/payments/src"
+      ],
+      "@app/payments/*": [
+        "./libs/payments/src/*"
       ]
     }
   },
