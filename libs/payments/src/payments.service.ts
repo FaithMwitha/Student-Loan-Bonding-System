@@ -20,6 +20,13 @@ export class PaymentsService {
     async findMyPayments(){
         return this.payments;
     }
+    async findOne(id:number){
+        const payment=this.payments.find((p)=>p.id === id);
+        if (!payment){
+            throw new NotFoundException(`Payment with ID ${id} not found`);
+        }
+        return payment;
+    }
         
 
     
