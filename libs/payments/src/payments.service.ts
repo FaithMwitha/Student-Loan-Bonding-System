@@ -27,7 +27,18 @@ export class PaymentsService {
         }
         return payment;
     }
-        
+      async verifyPayment(reference:string){
+        const payment=this.payments.find((p)=>p.transactionReference===reference);
+        if(!payment){
+            throw new NotFoundException(`Payment with reference ${reference} not found`);
+        }
+        return{
+            reference,
+            status:'VERIFIED',
+            gatewayResponse:'Transaction successful with external gateway(Mock)',
+            payment,
+        };
+      }  
 
     
 }

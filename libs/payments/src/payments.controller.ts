@@ -16,7 +16,10 @@ export class PaymentsController{
     async findMyPayments(){
         return await this.paymentsService.findMyPayments();
     }
-
+    @Get('verify/:reference')
+    async verifyPayment(@Param('reference')reference: string){
+        return await this.paymentsService.verifyPayment(reference);
+    }    
     @Get(':id')
     async findOne(@Param('id', ParseIntPipe) id:number){
         return await this.paymentsService.findOne(id);
