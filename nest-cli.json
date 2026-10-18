@@ -34,6 +34,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/loans/tsconfig.lib.json"
       }
+    },
+    "users": {
+      "type": "library",
+      "root": "libs/users",
+      "entryFile": "index",
+      "sourceRoot": "libs/users/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/users/tsconfig.lib.json"
+      }
     }
   },
   "monorepo": true,
