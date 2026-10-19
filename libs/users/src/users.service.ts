@@ -24,19 +24,29 @@ export class UsersService {
     const repo = manager
       ? manager.getRepository(UserEntity)
       : this.userRepository;
-    const existing = await repo.findOne({ where: { email: dto.email } });
+    const email = dto.email.toLowerCase();
+
+    const existing = await repo.findOne({ where: { email } });
     if (existing)
       throw new ConflictException('User with this email already exists');
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    return repo.save(
-      repo.create({
-        name: dto.name,
-        email: dto.email,
-        passwordHash,
-        primaryRole: role,
-        status: AccountStatus.ACTIVE,
-      }),
-    );
+    try {
+      return await repo.save(
+        repo.create({
+          name: dto.name,
+          email,
+          passwordHash,
+          primaryRole: role,
+          status: AccountStatus.ACTIVE,
+        }),
+      );
+    } catch (err) {
+      if ((err as { code?: string }).code === '23505') {
+        throw new ConflictException('User with this email already exists');
+      }
+      throw err;
+    }
   }
 
   createStudent(dto: CreateUserDto, manager?: EntityManager) {
@@ -57,11 +67,9 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new NotFoundException(`User with email ${email} not found`);
-    }
-    return user;
+    return this.userRepository.findOne({
+      where: { email: email.toLowerCase() },
+    });
   }
 
   async updateName(id: string, name: string) {
