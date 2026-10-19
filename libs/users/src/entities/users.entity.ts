@@ -18,7 +18,6 @@ export class UserEntity extends BaseEntity {
   @Column({
     type: 'enum',
     enum: Role,
-    default: Role.STUDENT,
   })
   primaryRole!: Role;
 
