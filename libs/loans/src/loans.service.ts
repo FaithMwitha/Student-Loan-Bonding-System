@@ -17,7 +17,7 @@ export class LoansService {
       studentId,
       fundingType: dto.fundingType,
       amountRequested: dto.amountRequested,
-      status: ApplicationStatus.SUBMITTED,
+      status: ApplicationStatus.PENDING_PAYMENT,
     });
     return this.loanRepo.save(loan);
   }
