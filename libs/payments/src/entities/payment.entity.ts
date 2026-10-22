@@ -1,10 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
-
+import { BaseEntity } from "@app/common";
 @Entity('payments')
-export class Payment{
-
-    @PrimaryGeneratedColumn('uuid')
-    id:number;
+export class Payment extends BaseEntity {
 
     @Column({nullable:true})
     applicationId: string;
@@ -20,10 +17,4 @@ export class Payment{
      
     @Column({default:'PENDING'})
     status: string;
-     
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }

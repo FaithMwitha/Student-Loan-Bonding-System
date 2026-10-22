@@ -10,6 +10,7 @@
     "^@app/common$": "<rootDir>/../../../libs/common/src",
     "^@app/loans$": "<rootDir>/../../../libs/loans/src",
     "^@app/users$": "<rootDir>/../../../libs/users/src",
-    "^@app/auth$": "<rootDir>/../../../libs/auth/src"
+    "^@app/auth$": "<rootDir>/../../../libs/auth/src",
+    "^@app/payments$": "<rootDir>/../../../libs/payments/src"
   }
 }
