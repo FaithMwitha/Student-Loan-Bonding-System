@@ -28,7 +28,7 @@ import { LoansModule } from '@app/loans';
         autoLoadEntities: true,
 
         // Development only: automatically creates/updates entity tables.
-        synchronize: process.env.NODE_ENV !== 'production',
+        synchronize: false,
       }),
     }),
 
