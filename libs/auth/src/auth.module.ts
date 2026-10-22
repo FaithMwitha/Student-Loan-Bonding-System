@@ -5,9 +5,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/src/users.module';
-import { JwtAuthGuard } from '../auth/jwt/jwtauthguard';
-import { RolesGuard } from '../auth/roles/roles.guard';
+import { UsersModule } from '@app/users';
+import { JwtAuthGuard } from './jwt/jwtauthguard';
+import { RolesGuard } from './roles/roles.guard';
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { RolesGuard } from '../auth/roles/roles.guard';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtAuthGuard, RolesGuard, JwtModule],
 })
 export class AuthModule {}
 

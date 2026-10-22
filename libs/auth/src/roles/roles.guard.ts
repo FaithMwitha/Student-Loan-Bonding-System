@@ -9,7 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { Role } from '@app/common';
-import { ROLES_KEY } from '../roles/roles.decorators';
+import { ROLES_KEY } from './roles.decorators';
 
 interface AuthenticatedRequest extends Request {
   user?: {

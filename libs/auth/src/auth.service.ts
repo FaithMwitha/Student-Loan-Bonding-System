@@ -1,12 +1,13 @@
-
 import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
+import { AccountStatus } from '@app/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/src/users.service';
+import { UsersService } from '@app/users';
 
 @Injectable()
 export class AuthService {
@@ -44,6 +45,10 @@ export class AuthService {
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+    
+    if (user.status !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException('Account is suspended');
     }
 
     const accessToken = await this.jwtService.signAsync({

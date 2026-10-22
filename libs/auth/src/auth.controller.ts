@@ -10,12 +10,12 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-import { CreateUserDto } from '../users/src/dto/create-user.dto';
+import { CreateUserDto } from '@app/users';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from '../auth/jwt/jwtauthguard';
-import { RolesGuard } from '../auth/roles/roles.guard';
-import { Roles } from '../auth/roles/roles.decorators';
-import { Role } from '../common/src/enums/role.enum';
+import { JwtAuthGuard } from './jwt/jwtauthguard';
+import { RolesGuard } from './roles/roles.guard';
+import { Roles } from './roles/roles.decorators';
+import { Role } from '@app/common';
 
 @Controller('auth')
 export class AuthController {

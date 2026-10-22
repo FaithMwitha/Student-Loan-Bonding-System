@@ -6,8 +6,8 @@ import { ApiController } from './api.controller';
 import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 
-import { AuthModule } from '../../../libs/auth/auth.module';
-import { LoansModule } from '../../../libs/loans/src/loans.module';
+import { AuthModule } from '@app/auth';
+import { LoansModule } from '@app/loans';
 
 @Module({
   imports: [
