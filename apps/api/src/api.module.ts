@@ -7,7 +7,8 @@ import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 
 import { AuthModule } from '@app/auth';
-import { LoansModule
+import { LoansModule} from '@app/loans';
+import { PaymentsModule } from '@app/payments';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,6 +35,7 @@ import { LoansModule
     CommonModule,
     AuthModule,
     LoansModule,
+    PaymentsModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],
