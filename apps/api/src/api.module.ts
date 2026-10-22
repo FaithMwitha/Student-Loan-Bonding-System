@@ -7,8 +7,7 @@ import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 
 import { AuthModule } from '@app/auth';
-import { LoansModule } from '@app/loans';
-
+import { LoansModule
 @Module({
   imports: [
     ConfigModule.forRoot({
