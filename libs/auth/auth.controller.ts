@@ -15,7 +15,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwtauthguard';
 import { RolesGuard } from '../auth/roles/roles.guard';
 import { Roles } from '../auth/roles/roles.decorators';
-import { Role } from '../common/src/enums/role.enum';
+import { Role } from '@app/common';
 
 @Controller('auth')
 export class AuthController {
