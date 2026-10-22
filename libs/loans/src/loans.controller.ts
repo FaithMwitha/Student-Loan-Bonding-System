@@ -16,10 +16,8 @@ import {
   ApiResponse 
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { Role } from '../../common/src/enums/role.enum';
-import { JwtAuthGuard } from '../../auth/jwt/jwtauthguard';
-import { RolesGuard } from '../../auth/roles/roles.guard';
-import { Roles } from '../../auth/roles/roles.decorators';
+import { Role } from '@app/common';
+import { JwtAuthGuard, Roles, RolesGuard } from '@app/auth';
 import { LoansService } from './loans.service';
 import { CreateLoanApplicationDto } from './dto/create-loan-application.dto';
 import { ApplicationStatus } from './enums/application-status.enum';
