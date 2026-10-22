@@ -13,55 +13,42 @@
       "root": "apps/api",
       "entryFile": "main",
       "sourceRoot": "apps/api/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/api/tsconfig.app.json"
-      }
-    },
-    "auth": {
-      "type": "library",
-      "root": "libs/auth",
-      "entryFile": "index",
-      "sourceRoot": "libs/auth/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/auth/tsconfig.lib.json"
-      }
+      "compilerOptions": { "tsConfigPath": "apps/api/tsconfig.app.json" }
     },
     "common": {
       "type": "library",
       "root": "libs/common",
       "entryFile": "index",
       "sourceRoot": "libs/common/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/common/tsconfig.lib.json"
-      }
+      "compilerOptions": { "tsConfigPath": "libs/common/tsconfig.lib.json" }
     },
     "loans": {
       "type": "library",
       "root": "libs/loans",
       "entryFile": "index",
       "sourceRoot": "libs/loans/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/loans/tsconfig.lib.json"
-      }
+      "compilerOptions": { "tsConfigPath": "libs/loans/tsconfig.lib.json" }
     },
-<<<<<<< HEAD
-    "payments": {
-      "type": "library",
-      "root": "libs/payments",
-      "entryFile": "index",
-      "sourceRoot": "libs/payments/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/payments/tsconfig.lib.json"
-=======
     "users": {
       "type": "library",
       "root": "libs/users",
       "entryFile": "index",
       "sourceRoot": "libs/users/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/users/tsconfig.lib.json"
->>>>>>> 37976421676e1315b1910e05eacbd86b45a37482
-      }
+      "compilerOptions": { "tsConfigPath": "libs/users/tsconfig.lib.json" }
+    },
+    "auth": {
+      "type": "library",
+      "root": "libs/auth",
+      "entryFile": "index",
+      "sourceRoot": "libs/auth/src",
+      "compilerOptions": { "tsConfigPath": "libs/auth/tsconfig.lib.json" }
+    },
+    "payments": {
+      "type": "library",
+      "root": "libs/payments",
+      "entryFile": "index",
+      "sourceRoot": "libs/payments/src",
+      "compilerOptions": { "tsConfigPath": "libs/payments/tsconfig.lib.json" }
     }
   },
   "monorepo": true,
