@@ -11,7 +11,7 @@ export class PaymentsService {
         private readonly paymentRepository:Repository<Payment>,
     ){}
 
-   async createPayment(createPaymentDto: CreatePaymentDto){
+   async create(createPaymentDto: CreatePaymentDto){
     const newPayment=this.paymentRepository.create({
         ...createPaymentDto,
         status:'PENDING',
@@ -33,7 +33,7 @@ export class PaymentsService {
     return payment;
    }
 
-   async findOne(id:number){
+   async findOne(id:string){
     const payment= await this.paymentRepository.findOne({where:{id}});
     if(!payment){
         throw new NotFoundException(`Payment ith ID ${id} not found` );
