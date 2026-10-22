@@ -4,7 +4,7 @@
   "sourceRoot": "apps/api/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "builder": "rspack",
+    "builder": "webpack",
     "tsConfigPath": "apps/api/tsconfig.app.json"
   },
   "projects": {
@@ -35,7 +35,6 @@
         "tsConfigPath": "libs/loans/tsconfig.lib.json"
       }
     },
-<<<<<<< HEAD
     "payments": {
       "type": "library",
       "root": "libs/payments",
@@ -43,15 +42,15 @@
       "sourceRoot": "libs/payments/src",
       "compilerOptions": {
         "tsConfigPath": "libs/payments/tsconfig.lib.json"
-=======
-    "users": {
+        }
+        },
+        "users": {
       "type": "library",
       "root": "libs/users",
       "entryFile": "index",
       "sourceRoot": "libs/users/src",
       "compilerOptions": {
         "tsConfigPath": "libs/users/tsconfig.lib.json"
->>>>>>> 37976421676e1315b1910e05eacbd86b45a37482
       }
     }
   },

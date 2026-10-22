@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ApiController } from './api.controller';
 import { ApiService } from './api.service';
 import {CommonModule} from '@app/common'
-import {PaymentsModule} from '../../../libs/payments/src/payments.module';
+import {PaymentsModule} from '@app/payments';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 

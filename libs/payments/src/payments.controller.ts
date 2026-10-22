@@ -22,11 +22,11 @@ export class PaymentsController{
     }    
     @Get(':id')
     async findOne(@Param('id') id:string){
-        return await this.paymentsService.findOne(id);
+        return await this.paymentsService.findOne(Number(id));
     }
     @Patch(':id/status')
     async updateStatus(
-        @Param('id') id: string,
+        @Param('id') id: number,
         @Body('status') status: string,
     ){
         return await this.paymentsService.updateStatus(id, status);
