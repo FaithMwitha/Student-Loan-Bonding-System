@@ -22,9 +22,15 @@ export class LoansService {
     return this.loanRepo.save(loan);
   }
 
-  async findMyApplications(studentId: string) {
+  async findMyApplications(studentId: string, status?: ApplicationStatus) {
+    const whereClause: any = { studentId };
+    
+    if (status) {
+      whereClause.status = status;
+    }
+
     return this.loanRepo.find({
-      where: { studentId },
+      where: whereClause,
       order: { createdAt: 'DESC' },
     });
   }

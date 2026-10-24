@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApiController } from './api.controller';
 import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
-
 import { AuthModule } from '@app/auth';
 import { LoansModule } from '@app/loans';
 
@@ -13,6 +12,7 @@ import { LoansModule } from '@app/loans';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
     TypeOrmModule.forRootAsync({
