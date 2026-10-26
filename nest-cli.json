@@ -4,7 +4,7 @@
   "sourceRoot": "apps/api/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "builder": "rspack",
+    "builder": "webpack",
     "tsConfigPath": "apps/api/tsconfig.app.json"
   },
   "projects": {
@@ -44,16 +44,16 @@
         "tsConfigPath": "libs/loans/tsconfig.lib.json"
       }
     },
-    "notifications": {
+    "payments": {
       "type": "library",
-      "root": "libs/notifications",
+      "root": "libs/payments",
       "entryFile": "index",
-      "sourceRoot": "libs/notifications/src",
+      "sourceRoot": "libs/payments/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/notifications/tsconfig.lib.json"
-      }
-    },
-    "users": {
+        "tsConfigPath": "libs/payments/tsconfig.lib.json"
+        }
+        },
+        "users": {
       "type": "library",
       "root": "libs/users",
       "entryFile": "index",
