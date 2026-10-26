@@ -32,6 +32,9 @@
       "@app/loans": [
         "./libs/loans/src"
       ],
+      "@app/profile": [
+        "./libs/profile/src"
+      ],
       "@app/users": [
         "./libs/users/src"
       ]
