@@ -35,6 +35,12 @@
       "@app/users": [
         "./libs/users/src"
       ],
+      "@app/notifications": [
+        "./libs/notifications/src"
+      ],
+      "@app/payments": [
+        "./libs/payments/src"
+      ]
     }
   },
   "files": [],
