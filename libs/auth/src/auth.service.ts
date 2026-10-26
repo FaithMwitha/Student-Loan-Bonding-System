@@ -15,7 +15,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(name: string, email: string, password: string) {
+  /*async register(name: string, email: string, password: string) {
     const existingUser = await this.usersService.findByEmail(email);
 
     if (existingUser) {
@@ -33,7 +33,7 @@ export class AuthService {
       user: this.toPublicUser(user),
   
     };
-  }
+  }*/
 
   async login(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
