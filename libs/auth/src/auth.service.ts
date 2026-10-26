@@ -28,14 +28,10 @@ export class AuthService {
       password,
     });
 
-    const accessToken = await this.jwtService.signAsync({
-      sub: user.id,
-      role: user.primaryRole,
-    });
-
     return {
+      message: 'Student registeredsuccessfully',
       user: this.toPublicUser(user),
-      accessToken,
+  
     };
   }
 

@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: student-loan-bonding-system
+    container_name: student-loans-bonding-system_postgres_data
     restart: always
     environment:
       POSTGRES_USER: ${DB_USERNAME}
