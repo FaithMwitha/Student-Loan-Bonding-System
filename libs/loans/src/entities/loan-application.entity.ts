@@ -27,7 +27,7 @@ export class LoanApplication {
   @Column({
     type: 'enum',
     enum: ApplicationStatus,
-    default: ApplicationStatus.SUBMITTED,
+    default: ApplicationStatus.PENDING_PAYMENT,
   })
   status: ApplicationStatus;
 

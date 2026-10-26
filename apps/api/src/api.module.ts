@@ -1,27 +1,44 @@
 import { Module } from '@nestjs/common';
-import { ApiController } from './api.controller';
-import { ApiService } from './api.service';
-import {CommonModule} from '@app/common'
-import {PaymentsModule} from '@app/payments';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { ApiController } from './api.controller';
+import { ApiService } from './api.service';
+import { CommonModule } from '@app/common';
+import { AuthModule } from '@app/auth';
+import { LoansModule } from '@app/loans';
+import { NotificationsModule } from '@app/notifications';
+import { PaymentsModule } from '@app/payments'; // <-- ADD THIS (or use the correct relative path)
 
 @Module({
-  imports:[
-    TypeOrmModule.forRoot({
-      type:'postgres',
-      host:'localhost',
-      port:5432,
-      username:'postgres',
-      password:'moyo',
-      database:'loans_board',
-      autoLoadEntities:true,
-      synchronize:true,
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: Number(configService.get<string>('DB_PORT')),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+        autoLoadEntities: true,
+        synchronize: process.env.NODE_ENV !== 'production',
+      }),
+    }),
+
     CommonModule,
-    PaymentsModule,
-  ], 
-  controllers:[ApiController],
-  providers:[ApiService]
+    AuthModule,
+    LoansModule,
+    NotificationsModule,
+    PaymentsModule, // <-- ADD THIS HERE
+  ],
+  controllers: [ApiController],
+  providers: [ApiService],
 })
 export class ApiModule {}

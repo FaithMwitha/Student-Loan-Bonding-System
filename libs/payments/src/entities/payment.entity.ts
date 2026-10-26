@@ -4,7 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 export class Payment{
 
     @PrimaryGeneratedColumn('uuid')
-    id:number;
+    id:string;
 
     @Column({nullable:true})
     applicationId: string;

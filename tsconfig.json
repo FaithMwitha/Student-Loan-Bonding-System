@@ -23,18 +23,18 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "paths": {
+      "@app/auth": [
+        "./libs/auth/src"
+      ],
       "@app/common": [
         "./libs/common/src"
       ],
       "@app/loans": [
         "./libs/loans/src"
       ],
-      "@app/payments": [
-        "./libs/payments/src"
+      "@app/users": [
+        "./libs/users/src"
       ],
-      "@app/payments/*": [
-        "./libs/payments/src/*"
-      ]
     }
   },
   "files": [],
