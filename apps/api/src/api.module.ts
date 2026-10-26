@@ -7,6 +7,7 @@ import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
 import { LoansModule } from '@app/loans';
+import { NotificationsModule } from '@app/notifications';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { LoansModule } from '@app/loans';
     CommonModule,
     AuthModule,
     LoansModule,
+    NotificationsModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

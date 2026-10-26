@@ -32,6 +32,12 @@
       "@app/loans": [
         "./libs/loans/src"
       ],
+      "@app/notifications": [
+        "./libs/notifications/src"
+      ],
+      "@app/notifications/*": [
+        "./libs/notifications/src/*"
+      ],
       "@app/users": [
         "./libs/users/src"
       ]
