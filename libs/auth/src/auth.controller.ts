@@ -24,7 +24,7 @@ import { Role } from '@app/common';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
+  /*@Post('register')
   @ApiOperation({ 
     summary: 'Register a new Student' ,
     description: 'Create a new student account using their name, email, and password. The password must be at least 8 characters long.'
@@ -47,7 +47,7 @@ export class AuthController {
       body.email,
       body.password,
     );
-  }
+  }*/
 
 
    @Post('login')
