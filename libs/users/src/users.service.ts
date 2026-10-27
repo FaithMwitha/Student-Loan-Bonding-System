@@ -12,6 +12,9 @@ import { AccountStatus, Role } from '@app/common';
 
 @Injectable()
 export class UsersService {
+  update(id: string, arg1: { isEmailVerified: boolean; otpCode: null; }) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
