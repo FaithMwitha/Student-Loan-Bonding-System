@@ -21,21 +21,15 @@
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
-    "strictPropertyInitialization": false,
-    "paths": {
-      "@app/auth": [
-        "./libs/auth/src"
-      ],
-      "@app/common": [
-        "./libs/common/src"
-      ],
-      "@app/loans": [
-        "./libs/loans/src"
-      ],
-      "@app/users": [
-        "./libs/users/src"
-      ],
-    }
+      "strictPropertyInitialization": false,
+   "paths": {
+  "@app/auth": ["./libs/auth/src"],
+  "@app/loans": ["./libs/loans/src"],
+  "@app/notifications": ["./libs/notifications/src"],
+  "@app/payments": ["./libs/payments/src"],
+  "@app/common": ["./libs/common/src"],
+  "@app/users": ["./libs/users/src"]
+}
   },
   "files": [],
   "references": [
