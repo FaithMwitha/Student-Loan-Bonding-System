@@ -37,14 +37,10 @@
       ],
       "@app/users": [
         "./libs/users/src"
-      ]
+      ],
     }
   },
   "files": [],
-  "include": [
-    "apps/**/*",
-    "libs/**/*"
-  ],
   "references": [
     {
       "path": "./apps/api/tsconfig.app.json"
