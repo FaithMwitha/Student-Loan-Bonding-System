@@ -1,7 +1,7 @@
 import { Column, Entity } from 'typeorm';
-import { BaseEntity } from '@app/common';
+import { BaseEntity,Role, AccountStatus} from '@app/common'
 import { Exclude } from 'class-transformer';
-import { Role, AccountStatus } from '@app/common';
+
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {
   // ...name,  email, passwordHash stay the same...
@@ -27,6 +27,22 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   @Exclude()
   refreshTokenHash?: string;
+//Adding a new column for OTP code
+@Column({ type: 'boolean', default: false })
+isEmailVerified!: boolean;
 
+@Column({ type: 'varchar', length: 64, nullable: true })
+@Exclude()
+otpCode!: string | null;
+
+@Column({ type: 'timestamptz', nullable: true })
+otpExpiresAt!: Date | null;
+
+@Column({ type: 'varchar', length: 64, nullable: true })
+@Exclude()
+passwordResetCodeHash!: string | null;
+
+@Column({ type: 'timestamptz', nullable: true })
+passwordResetExpiresAt!: Date | null;
 
 }
