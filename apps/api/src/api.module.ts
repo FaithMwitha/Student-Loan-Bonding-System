@@ -7,8 +7,7 @@ import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
 import { LoansModule } from '@app/loans';
-import { NotificationsModule } from '@app/notifications';
-import { PaymentsModule } from '@app/payments'; // <-- ADD THIS (or use the correct relative path)
+import { ProfileModule } from '@app/profile';
 
 @Module({
   imports: [
@@ -35,8 +34,7 @@ import { PaymentsModule } from '@app/payments'; // <-- ADD THIS (or use the corr
     CommonModule,
     AuthModule,
     LoansModule,
-    NotificationsModule,
-    PaymentsModule, // <-- ADD THIS HERE
+    ProfileModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],
