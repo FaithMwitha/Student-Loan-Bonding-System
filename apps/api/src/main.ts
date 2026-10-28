@@ -6,7 +6,7 @@ import { ApiModule } from './api.module';
 async function bootstrap() {
   const app = await NestFactory.create(ApiModule);
   app.setGlobalPrefix('api');
-  
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -15,12 +15,17 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('Loan System')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Student Loan Bonding System')
+      .setDescription('API documentation for the payment and bonding modules')
+      .setVersion('1.0')
+      .addTag('payments')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+  }
 
   await app.listen(process.env.PORT ?? 3000);
 }

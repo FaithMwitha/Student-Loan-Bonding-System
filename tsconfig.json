@@ -23,27 +23,14 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "paths": {
-      "@app/auth": [
-        "./libs/auth/src"
-      ],
-      "@app/common": [
-        "./libs/common/src"
-      ],
-      "@app/loans": [
-        "./libs/loans/src"
-      ],
-      "@app/profile": [
-        "./libs/profile/src"
-      ],
-      "@app/users": [
-        "./libs/users/src"
-      ],
-      "@app/notifications": [
-        "./libs/notifications/src"
-      ],
-      "@app/payments": [
-        "./libs/payments/src"
-      ]
+      "@app/auth": ["./libs/auth/src"],
+      "@app/common": ["./libs/common/src"],
+      "@app/loans": ["./libs/loans/src"],
+      "@app/notifications": ["./libs/notifications/src"],
+      "@app/payments": ["./libs/payments/src"],
+      "@app/profile": ["./libs/profile/src"],
+      "@app/review": ["./libs/review/src"],
+      "@app/users": ["./libs/users/src"]
     }
   },
   "files": [],
