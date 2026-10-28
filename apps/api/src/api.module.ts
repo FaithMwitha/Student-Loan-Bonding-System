@@ -7,7 +7,10 @@ import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
 import { LoansModule } from '@app/loans';
+import { NotificationsModule } from '@app/notifications';
 import { ProfileModule } from '@app/profile';
+import { PaymentsModule } from '@app/payments';
+import { ReviewModule } from '@app/review';
 
 @Module({
   imports: [
@@ -34,7 +37,10 @@ import { ProfileModule } from '@app/profile';
     CommonModule,
     AuthModule,
     LoansModule,
+    NotificationsModule,
     ProfileModule,
+    PaymentsModule,
+    ReviewModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],
