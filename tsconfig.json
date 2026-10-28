@@ -37,6 +37,18 @@
       ],
       "@app/users": [
         "./libs/users/src"
+      ],
+      "@app/notifications": [
+        "./libs/notifications/src"
+      ],
+      "@app/payments": [
+        "./libs/payments/src"
+      ],
+      "@app/review": [
+        "./libs/review/src"
+      ],
+      "@app/verification": [
+        "./libs/verification/src"
       ]
     }
   },
