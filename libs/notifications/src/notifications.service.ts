@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
@@ -40,6 +40,33 @@ export class NotificationsService {
       where: { userId },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  // Mark a notification as read
+  async markAsRead(id: string, userId: string) {
+    const notification = await this.notificationRepo.findOne({ 
+      where: { id, userId } 
+    });
+    
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    notification.isRead = true;
+    return this.notificationRepo.save(notification);
+  }
+
+  // Delete a notification
+  async remove(id: string, userId: string) {
+    const notification = await this.notificationRepo.findOne({ 
+      where: { id, userId } 
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    return this.notificationRepo.remove(notification);
   }
 
   // Generate 6-digit OTP and send email
