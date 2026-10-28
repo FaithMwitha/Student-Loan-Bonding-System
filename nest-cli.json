@@ -61,6 +61,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/users/tsconfig.lib.json"
       }
+    },
+    "verification": {
+      "type": "library",
+      "root": "libs/verification",
+      "entryFile": "index",
+      "sourceRoot": "libs/verification/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/verification/tsconfig.lib.json"
+      }
     }
   },
   "monorepo": true,
