@@ -1,3 +1,4 @@
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '@app/auth';
@@ -12,6 +13,6 @@ import { Notification } from './entities/notification.entity';
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],
-  exports: [NotificationsService],
+  exports: [NotificationsService, TypeOrmModule], 
 })
 export class NotificationsModule {}
