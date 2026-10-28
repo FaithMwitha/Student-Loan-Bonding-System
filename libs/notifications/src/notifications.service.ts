@@ -87,6 +87,30 @@ export class NotificationsService extends EmailSender {
     return this.notificationRepo.remove(notification);
   }
 
+  // Generate 6-digit OTP and send email
+  async sendOtpEmail(email: string, otp: string) {
+    if (!this.transporter) {
+      this.logger.error('Email transporter not ready yet');
+      return;
+    }
+
+    notification.isRead = true;
+    return this.notificationRepo.save(notification);
+  }
+
+  // Delete a notification
+  async remove(id: string, userId: string) {
+    const notification = await this.notificationRepo.findOne({ 
+      where: { id, userId } 
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    return this.notificationRepo.remove(notification);
+  }
+
   // Generate 6-digit OTP and send email (Kept for backwards compatibility)
   async sendOtpEmail(email: string, otp: string) {
     await this.send(
