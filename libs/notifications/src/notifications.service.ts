@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import * as nodemailer from 'nodemailer';
+import { EmailSender } from '../../verification/src/email-sender';
 
 @Injectable()
-export class NotificationsService {
+export class NotificationsService extends EmailSender {
   private readonly logger = new Logger(NotificationsService.name);
   private transporter: nodemailer.Transporter;
 
@@ -13,7 +14,7 @@ export class NotificationsService {
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
   ) {
-    // Set up a test email account using Ethereal (no real password needed)
+    super(); // Required because we are extending EmailSender
     nodemailer.createTestAccount().then((account) => {
       this.transporter = nodemailer.createTransport({
         host: account.smtp.host,
@@ -26,6 +27,23 @@ export class NotificationsService {
       });
       this.logger.log('Test email account ready');
     });
+  }
+
+  // THIS IS THE METHOD THEY ASKED FOR
+  async send(to: string, subject: string, text: string): Promise<void> {
+    if (!this.transporter) {
+      this.logger.error('Email transporter not ready yet');
+      return;
+    }
+
+    const info = await this.transporter.sendMail({
+      from: '"Student Loan System" <noreply@studentloan.com>',
+      to,
+      subject,
+      text,
+    });
+
+    this.logger.log(`Email sent! Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
   }
 
   // Save a notification to the DB
@@ -76,17 +94,30 @@ export class NotificationsService {
       return;
     }
 
-    const info = await this.transporter.sendMail({
-      from: '"Student Loan System" <noreply@studentloan.com>',
-      to: email,
-      subject: 'Your Email Verification Code',
-      text: `Your OTP code is: ${otp}. It expires in 15 minutes.`,
-      html: `<b>Your OTP code is: <span style="font-size: 24px; color: blue;">${otp}</span></b>`,
+    notification.isRead = true;
+    return this.notificationRepo.save(notification);
+  }
+
+  // Delete a notification
+  async remove(id: string, userId: string) {
+    const notification = await this.notificationRepo.findOne({ 
+      where: { id, userId } 
     });
 
-    // Print the Ethereal link in terminal so you can view the email
-    this.logger.log(`OTP Email sent! Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-    return info;
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    return this.notificationRepo.remove(notification);
+  }
+
+  // Generate 6-digit OTP and send email (Kept for backwards compatibility)
+  async sendOtpEmail(email: string, otp: string) {
+    await this.send(
+      email, 
+      'Your Email Verification Code', 
+      `Your OTP code is: ${otp}. It expires in 15 minutes.`
+    );
   }
 
   // Trigger when a loan status changes

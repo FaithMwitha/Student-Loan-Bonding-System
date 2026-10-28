@@ -72,6 +72,12 @@ export class UsersService {
     });
   }
 
+  async markEmailVerified(id: string) {
+    const user = await this.findById(id);
+    user.emailVerified = new Date();
+    return this.userRepository.save(user);
+  }
+
   async updateName(id: string, name: string) {
     // self-service
     const user = await this.findById(id);

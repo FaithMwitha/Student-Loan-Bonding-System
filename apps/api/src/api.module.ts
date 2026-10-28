@@ -11,6 +11,7 @@ import { NotificationsModule } from '@app/notifications';
 import { ProfileModule } from '@app/profile';
 import { PaymentsModule } from '@app/payments';
 import { ReviewModule } from '@app/review';
+import { VerificationModule } from '@app/verification';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ReviewModule } from '@app/review';
     ProfileModule,
     PaymentsModule,
     ReviewModule,
+    VerificationModule, 
   ],
   controllers: [ApiController],
   providers: [ApiService],
