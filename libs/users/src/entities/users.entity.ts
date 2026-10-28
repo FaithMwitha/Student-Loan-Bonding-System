@@ -11,6 +11,9 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   email!: string;
 
+  @Column({name:'email_verified', type: 'timestamptz', nullable: true})
+  emailVerified?: Date | null;
+
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Exclude()
   passwordHash!: string;
