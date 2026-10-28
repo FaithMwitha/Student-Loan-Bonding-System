@@ -33,7 +33,7 @@ export class PaymentsService {
     return payment;
    }
 
-   async findOne(id:number){
+   async findOne(id:string){
     const payment= await this.paymentRepository.findOne({where:{id}});
     if(!payment){
         throw new NotFoundException(`Payment ith ID ${id} not found` );
@@ -41,7 +41,7 @@ export class PaymentsService {
     return payment;
    }
 
-   async updateStatus(id:number, status:string){
+   async updateStatus(id: string, status:string){
     const payment= await this.findOne(id);
     payment.status=status;
     return await this.paymentRepository.save(payment);

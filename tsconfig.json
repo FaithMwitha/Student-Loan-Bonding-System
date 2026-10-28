@@ -37,12 +37,6 @@
       ],
       "@app/users": [
         "./libs/users/src"
-      ],
-      "@app/verification": [
-        "./libs/verification/src"
-      ],
-      "@app/notifications": [
-        "./libs/notifications/src"
       ]
     }
   },
