@@ -22,7 +22,7 @@ export class AuthController {
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
   }
-   @Post('forgot-password')
+ /*  @Post('forgot-password')
 @HttpCode(HttpStatus.OK)
 @ApiOperation({ summary: 'Request a password reset' })
 forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -45,7 +45,7 @@ resetPassword(@Body() dto: ResetPasswordDto) {
     dto.code,
     dto.newPassword,
   );
-}
+}*/
 
     @Get('me')
 @UseGuards(JwtAuthGuard)

@@ -47,7 +47,7 @@ async getMe(userId: string) {
   };
 }
 
-async forgotPassword(email: string) {
+/*async forgotPassword(email: string) {
   const user = await this.usersService.findByEmail(email);
 
   if (!user) {
@@ -123,7 +123,7 @@ async forgotPassword(email: string) {
 return {
   message: 'Password reset successfully.',
 };
-}
+}*/
   private toPublicUser(user: any) {
     return {
       id: user.id,
