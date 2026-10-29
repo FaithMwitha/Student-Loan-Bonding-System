@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ApiController } from './api.controller';
-import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
 import { LoansModule } from '@app/loans';
@@ -42,9 +40,7 @@ import { VerificationModule } from '@app/verification';
     ProfileModule,
     PaymentsModule,
     ReviewModule,
-    VerificationModule, 
+    VerificationModule,
   ],
-  controllers: [ApiController],
-  providers: [ApiService],
 })
 export class ApiModule {}
