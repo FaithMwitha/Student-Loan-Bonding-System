@@ -29,6 +29,8 @@ import { VerificationModule } from '@app/verification';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
+
+        // Development only: automatically creates/updates entity tables.
         synchronize: process.env.NODE_ENV !== 'production',
       }),
     }),

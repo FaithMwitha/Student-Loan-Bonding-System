@@ -12,6 +12,9 @@ import { AccountStatus, Role } from '@app/common';
 
 @Injectable()
 export class UsersService {
+  update(id: string, arg1: { isEmailVerified: boolean; otpCode: null; }) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
@@ -91,4 +94,18 @@ export class UsersService {
     user.status = status;
     return this.userRepository.save(user);
   }
+
+  //Temporary add
+  async resetPassword(
+  id: string,
+  passwordHash: string,
+): Promise<void> {
+  const user = await this.findById(id);
+
+  user.passwordHash = passwordHash;
+  user.passwordResetCodeHash = null;
+  user.passwordResetExpiresAt = null;
+
+  await this.userRepository.save(user);
+}
 }

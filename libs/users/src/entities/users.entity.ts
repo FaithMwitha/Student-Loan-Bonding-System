@@ -1,7 +1,7 @@
 import { Column, Entity } from 'typeorm';
-import { BaseEntity } from '@app/common';
+import { BaseEntity,Role, AccountStatus} from '@app/common'
 import { Exclude } from 'class-transformer';
-import { Role, AccountStatus } from '@app/common';
+
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {
   // ...name,  email, passwordHash stay the same...
@@ -30,4 +30,5 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   @Exclude()
   refreshTokenHash?: string;
+
 }
