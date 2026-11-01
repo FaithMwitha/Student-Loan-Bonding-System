@@ -68,23 +68,23 @@ async forgotPassword(email: string) {
   };
 }
 
-  async verifyEmail(email: string, code: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
+  // async verifyEmail(email: string, code: string) {
+  //   const user = await this.usersService.findByEmail(email);
+  //   if (!user) {
+  //     throw new BadRequestException('User not found');
+  //   }
 
-    if (user.otpCode !== code) {
-      throw new BadRequestException('Invalid verification code');
-    }
+  //   if (user.otpCode !== code) {
+  //     throw new BadRequestException('Invalid verification code');
+  //   }
 
-    await this.usersService.update(user.id, {
-      isEmailVerified: true,
-      otpCode: null,
-    });
+  //   await this.usersService.update(user.id, {
+  //     isEmailVerified: true,
+  //     otpCode: null,
+  //   });
 
-    return { message: 'Email successfully verified!' };
-  }
+  //   return { message: 'Email successfully verified!' };
+  // }
 
   async resetPassword(
   email: string,
