@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
-import { Role } from '@app/common';
+import { Role } from '../../../common/src';
 
 interface JwtPayload {
   sub: string;
