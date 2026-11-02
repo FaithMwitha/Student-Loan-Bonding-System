@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { Role } from '@app/common';
+import { Role } from '../../../common/src';
 import { ROLES_KEY } from './roles.decorators';
 
 interface AuthenticatedRequest extends Request {
