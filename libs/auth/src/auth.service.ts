@@ -5,7 +5,9 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from '../../users/src/users.service';
 import { UserEntity } from '../../users/src/entities/users.entity';
-
+import { VerificationEntity } from './entities/verification.entity';
+import { Verification } from './enums/verification.enums';
+import { randomInt } from 'crypto';
 
 
 @Injectable()
@@ -17,6 +19,9 @@ export class AuthService {
     
   @InjectRepository(UserEntity)
   private readonly userRepository: Repository<UserEntity>,
+
+  @InjectRepository(VerificationEntity)
+  private readonly verificationRepository: Repository<VerificationEntity>,
 ) {}
 async getMe(userId: string) {
   const user = await this.usersService.findById(userId);
@@ -47,82 +52,210 @@ async getMe(userId: string) {
   };
 }
 
-async forgotPassword(email: string) {
+private async generateOtp(
+  userId: string,
+  purpose: Verification,
+) {
+  // Generate a six-digit OTP
+  const otpCode = randomInt(100000, 1000000).toString();
+
+  // Hash the OTP
+  const otpCodeHash = await bcrypt.hash(otpCode, 10);
+
+  // Set expiry time to 15 minutes
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  // Save verification record
+  const verification = this.verificationRepository.create({
+    userId,
+    otpCodeHash,
+    purpose,
+    expiresAt,
+    isUsed: false,
+  });
+  await this.verificationRepository.update(
+  {
+    userId,
+    purpose,
+    isUsed: false,
+  },
+  {
+    isUsed: true,
+  },
+);
+  await this.verificationRepository.save(verification);
+
+  // Return OTP temporarily for integration/testing
+  return otpCode;
+  
+}
+async requestOtp(email: string) {
   const user = await this.usersService.findByEmail(email);
 
   if (!user) {
     throw new BadRequestException('User not found');
   }
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  if (user.emailVerified) {
+    throw new BadRequestException('Email is already verified');
+  }
 
-  const passwordResetCodeHash = await bcrypt.hash(code, 10);
-
-  user.passwordResetCodeHash = passwordResetCodeHash;
-  user.passwordResetExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-  await this.userRepository.save(user);
+  const otp = await this.generateOtp(
+    user.id,
+    Verification.EMAIL_VERIFICATION,
+  );
 
   return {
-    message: 'Password reset code generated. Email delivery is not implemented yet.',
+    message: 'Verification OTP generated successfully',
+    otp,
   };
 }
-
-  // async verifyEmail(email: string, code: string) {
-  //   const user = await this.usersService.findByEmail(email);
-  //   if (!user) {
-  //     throw new BadRequestException('User not found');
-  //   }
-
-  //   if (user.otpCode !== code) {
-  //     throw new BadRequestException('Invalid verification code');
-  //   }
-
-  //   await this.usersService.update(user.id, {
-  //     isEmailVerified: true,
-  //     otpCode: null,
-  //   });
-
-  //   return { message: 'Email successfully verified!' };
-  // }
-
-  async resetPassword(
-  email: string,
-  code: string,
-  newPassword: string,
-) {
+async verifyEmail(email: string, code: string) {
+  // 1. Find the user
   const user = await this.usersService.findByEmail(email);
 
   if (!user) {
-    throw new BadRequestException('Invalid or expired reset code');
+    throw new BadRequestException('User not found');
   }
 
-  if (
-    !user.passwordResetCodeHash ||
-    !user.passwordResetExpiresAt ||
-    user.passwordResetExpiresAt.getTime() < Date.now()
-  ) {
-    throw new BadRequestException('Invalid or expired reset code');
+  // 2. Check whether email is already verified
+  if (user.emailVerified) {
+    throw new BadRequestException('Email is already verified');
   }
 
-  const isValidCode = await bcrypt.compare(
+  // 3. Find the latest unused email verification record
+  const verification = await this.verificationRepository.findOne({
+    where: {
+      userId: user.id,
+      purpose: Verification.EMAIL_VERIFICATION,
+      isUsed: false,
+    },
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+
+  if (!verification) {
+    throw new BadRequestException('No verification OTP found');
+  }
+
+  // 4. Check OTP expiry
+  if (verification.expiresAt.getTime() < Date.now()) {
+    throw new BadRequestException('Verification OTP has expired');
+  }
+
+  // 5. Compare submitted OTP with stored hash
+  const isValid = await bcrypt.compare(
     code,
-    user.passwordResetCodeHash,
+    verification.otpCodeHash,
   );
 
-  if (!isValidCode) {
-    throw new BadRequestException('Invalid or expired reset code');
+  if (!isValid) {
+    throw new BadRequestException('Invalid verification code');
   }
 
+  // 6. Update user and mark OTP as used
+  await this.userRepository.update(user.id, {
+    emailVerified: true,
+  });
+
+  await this.verificationRepository.update(
+    verification.id,
+    { isUsed: true },
+  );
+
+  return {
+    message: 'Email successfully verified',
+  };
+}
+async verifyOtp(email: string, otp: string) {
+  const user = await this.usersService.findByEmail(email);
+
+  if (!user) {
+    throw new BadRequestException('Invalid or expired OTP');
+  }
+
+  const verification = await this.verificationRepository.findOne({
+    where: {
+      userId: user.id,
+      purpose: Verification.PASSWORD_RESET,
+      isUsed: false,
+    },
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+
+  if (
+    !verification ||
+    verification.expiresAt.getTime() < Date.now()
+  ) {
+    return false;
+  }
+
+  return bcrypt.compare(otp, verification.otpCodeHash);
+}
+async resetPassword(
+  email: string,
+  otp: string,
+  newPassword: string,
+) {
+  // 1. Find the user
+  const user = await this.usersService.findByEmail(email);
+
+  if (!user) {
+    throw new BadRequestException('Invalid or expired OTP');
+  }
+
+  // 2. Find the latest unused password-reset verification
+  const verification = await this.verificationRepository.findOne({
+    where: {
+      userId: user.id,
+      purpose: Verification.PASSWORD_RESET,
+      isUsed: false,
+    },
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+
+  // 3. Check whether OTP exists and has expired
+  if (
+    !verification ||
+    verification.expiresAt.getTime() < Date.now()
+  ) {
+    throw new BadRequestException('Invalid or expired OTP');
+  }
+
+  // 4. Compare submitted OTP with stored hash
+  const isValid = await bcrypt.compare(
+    otp,
+    verification.otpCodeHash,
+  );
+
+  if (!isValid) {
+    throw new BadRequestException('Invalid or expired OTP');
+  }
+
+  // 5. Hash the new password
   const passwordHash = await bcrypt.hash(newPassword, 10);
 
-  // We need a UsersService method to save this password and clear the reset code.
-  // Do not change the database directly from AuthService.
-  await this.usersService.resetPassword(user.id, passwordHash);
+  // 6. Update user's password
+  await this.userRepository.update(user.id, {
+    passwordHash,
+  });
 
-return {
-  message: 'Password reset successfully.',
-};
+  // 7. Mark OTP as used
+  await this.verificationRepository.update(
+    verification.id,
+    {
+      isUsed: true,
+    },
+  );
+
+  return {
+    message: 'Password reset successfully',
+  };
 }
   private toPublicUser(user: any) {
     return {

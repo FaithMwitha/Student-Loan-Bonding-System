@@ -15,12 +15,22 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('Student Loan Bonding System')
-    .setDescription('API documentation for the payment and bonding modules')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build(); // <-- tagsSort removed
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Student Loan Bonding System')
+      .setDescription('API documentation for the payment and bonding modules')
+      .setVersion('1.0')
+      .addTag('payments')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document, {
+  swaggerOptions: {
+    tagsSorter: 'alpha',
+    operationsSorter: 'alpha',
+  },
+});
+  }
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
