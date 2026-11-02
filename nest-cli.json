@@ -8,6 +8,15 @@
     "tsConfigPath": "apps/api/tsconfig.app.json"
   },
   "projects": {
+    "account-management": {
+      "type": "library",
+      "root": "libs/account-management",
+      "entryFile": "index",
+      "sourceRoot": "libs/account-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/account-management/tsconfig.lib.json"
+      }
+    },
     "api": {
       "type": "application",
       "root": "apps/api",
