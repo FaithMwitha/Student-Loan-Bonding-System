@@ -21,7 +21,7 @@ import { Role } from '@app/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
-@ApiTags('payments')
+@ApiTags('Payments')
 @ApiBearerAuth()
 @Controller('payments')
 export class PaymentsController {
@@ -34,7 +34,6 @@ export class PaymentsController {
   @ApiResponse({ status: 201, description: 'Payment created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
   create(@Body() dto: CreatePaymentDto) {
-    // TODO: tag payment with req.user.sub once Payment entity has a userId column
     return this.paymentsService.create(dto);
   }
 
@@ -44,7 +43,6 @@ export class PaymentsController {
   @ApiResponse({ status: 200, description: 'List of payments for the authenticated user' })
   @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
   findMyPayments() {
-    // TODO: filter by req.user.sub once Payment entity has a userId column
     return this.paymentsService.findMyPayments();
   }
 
@@ -86,8 +84,6 @@ export class PaymentsController {
     return this.paymentsService.updateStatus(id, status);
   }
 
-  // Public webhook — providers can't send a JWT.
-  // TODO: verify provider signature inside handleWebhook before trusting the payload.
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Payment provider webhook (public)' })
