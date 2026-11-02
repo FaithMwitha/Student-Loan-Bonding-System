@@ -16,7 +16,7 @@ export class LoansService {
   async create(studentId: string, dto: CreateLoanApplicationDto) {
     const UPKEEP_AMOUNT = 560000;
     
-    // Fixed Tuition amounts per University
+  
     const tuitionAmounts: Record<string, number> = {
       'UNIMA': 1300000,
       'MZUNI': 1100000,
@@ -24,7 +24,9 @@ export class LoansService {
       'DEFAULT': 1000000, 
     };
 
-    const fixedTuition = tuitionAmounts[dto.university?.toUpperCase()] || tuitionAmounts['DEFAULT'];
+  
+    const fixedTuition = tuitionAmounts[dto.university?.toUpperCase() || ''] || tuitionAmounts['DEFAULT'];
+    
     let finalAmount = 0;
 
     // Logic for TUITION only
