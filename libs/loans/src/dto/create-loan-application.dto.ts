@@ -3,23 +3,6 @@ import { IsEnum, IsString, IsOptional, IsNumber, IsArray } from 'class-validator
 import { FundingType } from '../enums/funding-type.enum';
 
 export class CreateLoanApplicationDto {
-  @ApiProperty({
-    enum: FundingType,
-    example: FundingType.TUITION,
-    description: 'Select the fund type here (Tuition, Upkeep, or Both). The system will calculate the final amount automatically.',
-  })
-  @IsEnum(FundingType)
-  fundingType: FundingType;
-
-  @ApiProperty({
-    example: 'UNIMA',
-    description: 'The university the student is attending (e.g., UNIMA, MZUNI)',
-  })
-  @IsString()
-  university: string;
-
-  // Note: amountRequested has been removed. The backend handles the math!
-
   // --- Personal & Contact ---
   @ApiProperty({ required: false, example: 'OWSH1R3N' })
   @IsOptional()
@@ -46,7 +29,7 @@ export class CreateLoanApplicationDto {
   @IsString()
   phoneNumber?: string;
 
-  @ApiProperty({ required: false, example: 'Kanyenje full primary school post office box 22 Mvera Dowa' })
+  @ApiProperty({ required: false, example: 'Box 22 Mvera Dowa' })
   @IsOptional()
   @IsString()
   postalAddress?: string;
@@ -62,7 +45,7 @@ export class CreateLoanApplicationDto {
   @IsString()
   guarantorPhone?: string;
 
-  @ApiProperty({ required: false, example: 'Chidothi traditional authority mkukula dowa' })
+  @ApiProperty({ required: false, example: 'Chidothi, Dowa' })
   @IsOptional()
   @IsString()
   guarantorAddress?: string;
@@ -109,19 +92,35 @@ export class CreateLoanApplicationDto {
   @IsNumber()
   yearOfStudy?: number;
 
-  @ApiProperty({ required: false, example: 'We are more children in my family hence my parents cannot manage to pay my fees...' })
+  @ApiProperty({ required: false, example: 'I am requesting this loan because...' })
   @IsOptional()
   @IsString()
   personalStatement?: string;
 
   // --- Documents ---
-  @ApiProperty({ 
-    required: false, 
-    type: [String], 
-    example: ['Guardian National ID.pdf', 'Map to Home of Origin.jpg', 'Bank Deposit Slip.pdf'] 
-  })
+  @ApiProperty({ required: false, type: [String], example: ['Guardian National ID.pdf'] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   documents?: string[];
+
+  // --- FINAL STEP: UNIVERSITY & FUNDING TYPE ---
+  @ApiProperty({
+    required: false,
+    example: 'UNIMA',
+    description: 'The university the student is attending (Final step)',
+  })
+  @IsOptional()
+  @IsString()
+  university?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: FundingType,
+    example: FundingType.TUITION,
+    description: 'Select the fund type here. The system will calculate the final amount automatically.',
+  })
+  @IsOptional()
+  @IsEnum(FundingType)
+  fundingType?: FundingType;
 }
