@@ -12,7 +12,7 @@ import { AccountStatus, Role } from '@app/common';
 
 @Injectable()
 export class UsersService {
-  update(id: string, arg1: { isEmailVerified: boolean; otpCode: null; }) {
+  update(id: string, arg1: { isEmailVerified: boolean; otpCode: null }) {
     throw new Error('Method not implemented.');
   }
   constructor(
@@ -80,6 +80,24 @@ export class UsersService {
     user.emailVerified = new Date();
     return this.userRepository.save(user);
   }
+  async setPasswordResetCode(
+    id: string,
+    codeHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    const user = await this.findById(id);
+    user.passwordResetCodeHash = codeHash;
+    user.passwordResetExpiresAt = expiresAt;
+    await this.userRepository.save(user);
+  }
+
+  async resetPassword(id: string, passwordHash: string): Promise<void> {
+    const user = await this.findById(id);
+    user.passwordHash = passwordHash;
+    user.passwordResetCodeHash = null;
+    user.passwordResetExpiresAt = null;
+    await this.userRepository.save(user);
+  }
 
   async updateName(id: string, name: string) {
     // self-service
@@ -94,18 +112,4 @@ export class UsersService {
     user.status = status;
     return this.userRepository.save(user);
   }
-
-  //Temporary add
-  async resetPassword(
-  id: string,
-  passwordHash: string,
-): Promise<void> {
-  const user = await this.findById(id);
-
-  user.passwordHash = passwordHash;
-  user.passwordResetCodeHash = null;
-  user.passwordResetExpiresAt = null;
-
-  await this.userRepository.save(user);
-}
 }
