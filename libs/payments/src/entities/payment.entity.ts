@@ -1,29 +1,31 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 @Entity('payments')
-export class Payment{
+export class Payment {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @PrimaryGeneratedColumn('uuid')
-    id:string;
+  @Column({ nullable: true })
+  userId: string;
 
-    @Column({nullable:true})
-    applicationId: string;
+  @Column({ nullable: true })
+  applicationId: string;
 
-    @Column('decimal',{nullable: true})
-    amount:number;
+  @Column('decimal', { nullable: true })
+  amount: number;
 
-    @Column({nullable:true})
-    PaymentMethod: string;
+  @Column({ nullable: true })
+  paymentMethod: string;
 
-    @Column({unique:true, nullable:true})
-    transactionReference: string;
-     
-    @Column({default:'PENDING'})
-    status: string;
-     
-    @CreateDateColumn()
-    createdAt: Date;
+  @Column({ unique: true, nullable: true })
+  transactionReference: string;
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @Column({ default: 'PENDING' })
+  status: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
