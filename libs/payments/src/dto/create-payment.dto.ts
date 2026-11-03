@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsUUID, Equals } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePaymentDto {
@@ -11,18 +11,17 @@ export class CreatePaymentDto {
   applicationId: string;
 
   @ApiProperty({
-    description: 'Payment amount (must be >= 0)',
-    example: 500.0,
-    minimum: 0,
+    description: 'Payment amount — fixed at K10,000',
+    example: 10000,
+    enum: [10000],
   })
   @IsNumber()
-  @Min(0)
-  @IsNotEmpty()
+  @Equals(10000, { message: 'Payment amount must be exactly K10,000' })
   amount: number;
 
   @ApiProperty({
     description: 'Payment method used',
-    example: 'CARD',
+    example: 'AIRTEL_MONEY',
   })
   @IsString()
   @IsNotEmpty()

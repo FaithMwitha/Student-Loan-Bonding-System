@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,11 +16,14 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiBody,
+  ApiSecurity,
 } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles } from '@app/auth';
 import { Role } from '@app/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 
 @ApiTags('Payments')
 @ApiBearerAuth()
@@ -30,11 +34,15 @@ export class PaymentsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new payment' })
+  @ApiOperation({ summary: 'Create a new payment (fixed amount K10,000)' })
   @ApiResponse({ status: 201, description: 'Payment created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error — amount must be exactly K10,000' })
   @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
-  create(@Body() dto: CreatePaymentDto) {
-    return this.paymentsService.create(dto);
+  create(
+    @Body() dto: CreatePaymentDto,
+    @Req() req: { user: { sub: string } },
+  ) {
+    return this.paymentsService.create(dto, req.user.sub);
   }
 
   @Get('my-payments')
@@ -42,8 +50,8 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get my payments' })
   @ApiResponse({ status: 200, description: 'List of payments for the authenticated user' })
   @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
-  findMyPayments() {
-    return this.paymentsService.findMyPayments();
+  findMyPayments(@Req() req: { user: { sub: string } }) {
+    return this.paymentsService.findMyPayments(req.user.sub);
   }
 
   @Get('verify/:reference')
@@ -87,8 +95,11 @@ export class PaymentsController {
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Payment provider webhook (public)' })
+  @ApiSecurity({})
+  @ApiBody({ type: PaymentWebhookDto })
   @ApiResponse({ status: 200, description: 'Webhook processed' })
-  handleWebhook(@Body() payload: any) {
+  @ApiResponse({ status: 400, description: 'Invalid payload' })
+  handleWebhook(@Body() payload: PaymentWebhookDto) {
     return this.paymentsService.handleWebhook(payload);
   }
 }
