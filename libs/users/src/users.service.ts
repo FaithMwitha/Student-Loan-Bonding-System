@@ -51,6 +51,10 @@ export class UsersService {
       throw err;
     }
   }
+  //Added by Faith 
+  createAdmin(dto: CreateUserDto, manager?: EntityManager) {
+  return this.createWithRole(dto, Role.ADMIN, manager);
+}
 
   createStudent(dto: CreateUserDto, manager?: EntityManager) {
     return this.createWithRole(dto, Role.STUDENT, manager);
