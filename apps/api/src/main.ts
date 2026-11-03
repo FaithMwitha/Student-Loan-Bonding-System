@@ -20,20 +20,18 @@ async function bootstrap() {
       .setTitle('Student Loan Bonding System')
       .setDescription('API documentation for the payment and bonding modules')
       .setVersion('1.0')
-      .addTag('payments')
       .addBearerAuth()
       .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('docs', app, document, {
-  swaggerOptions: {
-    tagsSorter: 'alpha',
-    operationsSorter: 'alpha',
-  },
-});
-  }
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    
+    SwaggerModule.setup('docs', app, document, {
+      swaggerOptions: {
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+      },
+    });
+  }
   
   await app.listen(process.env.PORT ?? 3000);
 }
