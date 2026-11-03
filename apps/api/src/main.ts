@@ -24,12 +24,12 @@ async function bootstrap() {
         'API documentation for the payment and bonding modules',
       )
       .setVersion('1.0')
-      .addTag('payments')
       .addBearerAuth()
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
 
+    
     SwaggerModule.setup('docs', app, document, {
       swaggerOptions: {
         tagsSorter: 'alpha',
@@ -38,6 +38,7 @@ async function bootstrap() {
     });
   }
 
+  
   await app.listen(process.env.PORT ?? 3000);
 }
 
