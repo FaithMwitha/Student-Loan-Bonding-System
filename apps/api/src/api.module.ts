@@ -10,6 +10,7 @@ import { ProfileModule } from '@app/profile';
 import { PaymentsModule } from '@app/payments';
 import { ReviewModule } from '@app/review';
 import { VerificationModule } from '@app/verification';
+import { AccountManagementModule } from '@app/account-management';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { VerificationModule } from '@app/verification';
     PaymentsModule,
     ReviewModule,
     VerificationModule,
+    AccountManagementModule,
   ],
 })
 export class ApiModule {}
