@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
+import { AuditModule } from '@app/audit';
 import { LoansModule } from '@app/loans';
 import { NotificationsModule } from '@app/notifications';
 import { ProfileModule } from '@app/profile';
@@ -37,6 +38,7 @@ import { AccountManagementModule } from '@app/account-management';
 
     CommonModule,
     AuthModule,
+    AuditModule,
     LoansModule,
     NotificationsModule,
     ProfileModule,
