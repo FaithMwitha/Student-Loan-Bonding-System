@@ -12,6 +12,9 @@ import { AccountStatus, Role } from '@app/common';
 
 @Injectable()
 export class UsersService {
+  update(id: string, arg1: { isEmailVerified: boolean; otpCode: null }) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
@@ -48,6 +51,10 @@ export class UsersService {
       throw err;
     }
   }
+  //Added by Faith 
+  createAdmin(dto: CreateUserDto, manager?: EntityManager) {
+  return this.createWithRole(dto, Role.ADMIN, manager);
+}
 
   createStudent(dto: CreateUserDto, manager?: EntityManager) {
     return this.createWithRole(dto, Role.STUDENT, manager);
@@ -70,6 +77,30 @@ export class UsersService {
     return this.userRepository.findOne({
       where: { email: email.toLowerCase() },
     });
+  }
+
+  async markEmailVerified(id: string) {
+    const user = await this.findById(id);
+    user.emailVerified = new Date();
+    return this.userRepository.save(user);
+  }
+  async setPasswordResetCode(
+    id: string,
+    codeHash: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    const user = await this.findById(id);
+    user.passwordResetCodeHash = codeHash;
+    user.passwordResetExpiresAt = expiresAt;
+    await this.userRepository.save(user);
+  }
+
+  async resetPassword(id: string, passwordHash: string): Promise<void> {
+    const user = await this.findById(id);
+    user.passwordHash = passwordHash;
+    user.passwordResetCodeHash = null;
+    user.passwordResetExpiresAt = null;
+    await this.userRepository.save(user);
   }
 
   async updateName(id: string, name: string) {

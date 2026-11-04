@@ -1,4 +1,3 @@
-
 {
   "compilerOptions": {
     "module": "nodenext",
@@ -24,6 +23,9 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "paths": {
+      "@app/account-management": [
+        "./libs/account-management/src"
+      ],
       "@app/auth": [
         "./libs/auth/src"
       ],
@@ -33,20 +35,23 @@
       "@app/loans": [
         "./libs/loans/src"
       ],
+      "@app/notifications": [
+        "./libs/notifications/src"
+      ],
       "@app/payments": [
         "./libs/payments/src"
       ],
       "@app/profile": [
         "./libs/profile/src"
       ],
-      "@app/users": [
-        "./libs/users/src"
-      ],
       "@app/review": [
         "./libs/review/src"
       ],
-      "@app/notifications": [
-        "./libs/notifications/src"
+      "@app/users": [
+        "./libs/users/src"
+      ],
+      "@app/verification": [
+        "./libs/verification/src"
       ]
     }
   },

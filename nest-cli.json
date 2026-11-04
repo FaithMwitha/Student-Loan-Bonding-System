@@ -8,6 +8,15 @@
     "tsConfigPath": "apps/api/tsconfig.app.json"
   },
   "projects": {
+    "account-management": {
+      "type": "library",
+      "root": "libs/account-management",
+      "entryFile": "index",
+      "sourceRoot": "libs/account-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/account-management/tsconfig.lib.json"
+      }
+    },
     "api": {
       "type": "application",
       "root": "apps/api",
@@ -44,22 +53,31 @@
         "tsConfigPath": "libs/loans/tsconfig.lib.json"
       }
     },
-    "payments": {
+    "profile": {
       "type": "library",
-      "root": "libs/payments",
+      "root": "libs/profile",
       "entryFile": "index",
-      "sourceRoot": "libs/payments/src",
+      "sourceRoot": "libs/profile/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/payments/tsconfig.lib.json"
-        }
-        },
-        "users": {
+        "tsConfigPath": "libs/profile/tsconfig.lib.json"
+      }
+    },
+    "users": {
       "type": "library",
       "root": "libs/users",
       "entryFile": "index",
       "sourceRoot": "libs/users/src",
       "compilerOptions": {
         "tsConfigPath": "libs/users/tsconfig.lib.json"
+      }
+    },
+    "verification": {
+      "type": "library",
+      "root": "libs/verification",
+      "entryFile": "index",
+      "sourceRoot": "libs/verification/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/verification/tsconfig.lib.json"
       }
     }
   },
