@@ -13,7 +13,6 @@ import {
   ApiBearerAuth, 
   ApiOperation, 
   ApiTags, 
-  ApiQuery, 
   ApiResponse 
 } from '@nestjs/swagger';
 import { Request } from 'express';
@@ -23,7 +22,7 @@ import { RolesGuard } from '../../auth/src/roles/roles.guard';
 import { Roles } from '../../auth/src/roles/roles.decorators';
 import { LoansService } from './loans.service';
 import { CreateLoanApplicationDto } from './dto/create-loan-application.dto';
-import { ApplicationStatus } from './enums/application-status.enum';
+import { FilterLoansDto } from './dto/filter-loans.dto';
 
 interface AuthRequest extends Request {
   user: { sub: string; role: Role };
@@ -52,21 +51,15 @@ export class LoansController {
   @Get()
   @ApiOperation({ 
     summary: 'View my loan applications',
-    description: 'Retrieves a list of all loans applied for by the logged-in student.'
-  })
-  @ApiQuery({ 
-    name: 'status', 
-    required: false, 
-    enum: ApplicationStatus, 
-    description: 'Filter applications by status' 
+    description: 'Retrieves a list of all loans applied for by the logged-in student. You can filter by status, funding type, university, and paginate.'
   })
   @ApiResponse({ status: 200, description: 'Success! Returns an array of loan applications.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   findMy(
     @Req() req: AuthRequest,
-    @Query('status') status?: ApplicationStatus,
+    @Query() filterDto: FilterLoansDto,
   ) {
-    return this.loansService.findMyApplications(req.user.sub, status);
+    return this.loansService.findMyApplications(req.user.sub, filterDto);
   }
 
   @Get(':id')
@@ -79,7 +72,6 @@ export class LoansController {
   findOne(@Req() req: AuthRequest, @Param('id') id: string) {
     return this.loansService.findOne(id, req.user.sub);
   }
-
 
   @Patch(':id')
   @ApiOperation({ 
