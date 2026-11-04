@@ -97,8 +97,19 @@ export class CreateLoanApplicationDto {
   @IsString()
   personalStatement?: string;
 
-  // --- Documents ---
-  @ApiProperty({ required: false, type: [String], example: ['Guardian National ID.pdf'] })
+    // --- Documents ---
+  @ApiProperty({ 
+    required: false, 
+    type: [String], 
+    example: [
+      'Applicant National ID.pdf',
+      'Guarantor National ID.pdf',
+      'Map to Home of Origin.jpg',
+      'Guarantor Consent Form.pdf',
+      'Bank Deposit Slip.pdf',
+      'Affidavit.pdf'
+    ] 
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
