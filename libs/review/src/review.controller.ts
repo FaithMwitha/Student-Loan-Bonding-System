@@ -1,4 +1,5 @@
-import { Controller, Patch, Param, Body, UseGuards } from '@nestjs/common';
+
+import { Controller, Patch, Param, Body, UseGuards, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewService } from './review.service';
 import { ReviewDecisionDto } from './dto/review-decision.dto';
@@ -13,9 +14,45 @@ import { JwtAuthGuard, Roles, RolesGuard } from '@app/auth';
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
+  // Approve or reject a loan application
   @Patch(':loanId')
   @ApiOperation({ summary: 'Approve or reject a loan application' })
-  reviewLoan(@Param('loanId') loanId: string, @Body() dto: ReviewDecisionDto) {
-    return this.reviewService.processReview(loanId, dto.status, dto.rejectionReason);
+  reviewLoan(
+    @Param('loanId') loanId: string,
+    @Body() dto: ReviewDecisionDto,
+  ) {
+    return this.reviewService.processReview(
+      loanId,
+      dto.status,
+      dto.rejectionReason,
+    );
+  }
+
+  // Get pending loans
+  @Get('loans/pending')
+  @ApiOperation({ summary: 'Get pending loan applications' })
+  getPendingLoans() {
+    return this.reviewService.getPendingLoans();
+  }
+
+  // Get loans under review
+  @Get('loans/under-review')
+  @ApiOperation({ summary: 'Get loans under review' })
+  getLoansUnderReview() {
+    return this.reviewService.getLoansUnderReview();
+  }
+
+  // Get rejected loans
+  @Get('loans/rejected')
+  @ApiOperation({ summary: 'Get rejected loan applications' })
+  getRejectedLoans() {
+    return this.reviewService.getRejectedLoans();
+  }
+
+  // Get accepted loans
+  @Get('loans/accepted')
+  @ApiOperation({ summary: 'Get accepted loan applications' })
+  getAcceptedLoans() {
+    return this.reviewService.getAcceptedLoans();
   }
 }

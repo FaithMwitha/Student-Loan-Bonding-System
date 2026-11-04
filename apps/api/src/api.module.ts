@@ -9,7 +9,6 @@ import { NotificationsModule } from '@app/notifications';
 import { ProfileModule } from '@app/profile';
 import { PaymentsModule } from '@app/payments';
 import { ReviewModule } from '@app/review';
-import { VerificationModule } from '@app/verification';
 import { AccountManagementModule } from '@app/account-management';
 
 @Module({
@@ -43,7 +42,6 @@ import { AccountManagementModule } from '@app/account-management';
     ProfileModule,
     PaymentsModule,
     ReviewModule,
-    VerificationModule,
     AccountManagementModule,
   ],
 })
