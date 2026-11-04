@@ -2,25 +2,22 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
-import { EmailSender } from '../../verification/src/email-sender';
 
 @Injectable()
-export class NotificationsService extends EmailSender {
+export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
   ) {
-    super();
     this.logger.log('Email service ready (Console Mode)');
   }
 
   async send(to: string, subject: string, text: string): Promise<void> {
-    // We are logging to the console instead of using Nodemailer to prevent 500 errors
-    this.logger.log(` FAKE EMAIL SENT TO: ${to}`);
-    this.logger.log(` Subject: ${subject}`);
-    this.logger.log(` Content: ${text}`);
+    this.logger.log(`📧 FAKE EMAIL SENT TO: ${to}`);
+    this.logger.log(`📝 Subject: ${subject}`);
+    this.logger.log(`🔑 Content: ${text}`);
     this.logger.log(`-----------------------------------------`);
   }
 
