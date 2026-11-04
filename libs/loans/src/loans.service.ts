@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoanApplication } from './entities/loan-application.entity';
 import { CreateLoanApplicationDto } from './dto/create-loan-application.dto';
+import { FilterLoansDto } from './dto/filter-loans.dto'; 
 import { ApplicationStatus } from './enums/application-status.enum';
 import { FundingType } from './enums/funding-type.enum';
 
@@ -45,17 +46,37 @@ export class LoansService {
     return this.loanRepo.save(loan);
   }
 
-  async findMyApplications(studentId: string, status?: ApplicationStatus) {
-    const whereClause: any = { studentId };
-    
+  async findMyApplications(studentId: string, filterDto: FilterLoansDto) {
+    const { status, fundingType, university, search, page = 1, limit = 20 } = filterDto;
+
+    const queryBuilder = this.loanRepo.createQueryBuilder('loan')
+      .where('loan.studentId = :studentId', { studentId });
+
     if (status) {
-      whereClause.status = status;
+      queryBuilder.andWhere('loan.status = :status', { status });
     }
 
-    return this.loanRepo.find({
-      where: whereClause,
-      order: { createdAt: 'DESC' },
-    });
+    if (fundingType) {
+      queryBuilder.andWhere('loan.fundingType = :fundingType', { fundingType });
+    }
+
+    if (university) {
+      queryBuilder.andWhere('loan.university = :university', { university });
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(CAST(loan.id AS text) ILIKE :search OR loan.nationalId ILIKE :search)', 
+        { search: `%${search}%` }
+      );
+    }
+
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    queryBuilder.orderBy('loan.createdAt', 'DESC');
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: string, studentId: string) {
@@ -68,11 +89,9 @@ export class LoansService {
     return loan;
   }
 
-  
   async updateApplication(id: string, studentId: string, dto: Partial<CreateLoanApplicationDto>) {
     const loan = await this.findOne(id, studentId);
 
-    // Block updates if the loan is already being processed
     if (
       loan.status === ApplicationStatus.UNDER_REVIEW || 
       loan.status === ApplicationStatus.APPROVED || 
@@ -81,23 +100,24 @@ export class LoansService {
       throw new BadRequestException('Cannot update an application that is already under review or finalized.');
     }
 
-    // Merge the incoming DTO into the loan object first
     Object.assign(loan, dto);
 
-    // If they update university or fundingType, recalculate the amount
     if (dto.university || dto.fundingType) {
       const UPKEEP_AMOUNT = 560000;
       const tuitionAmounts: Record<string, number> = {
         'UNIMA': 1300000, 'MZUNI': 1100000, 'MUST': 1500000, 'DEFAULT': 1000000, 
       };
       
-      const fixedTuition = tuitionAmounts[loan.university?.toUpperCase() || ''] || tuitionAmounts['DEFAULT'];
+      const currentUniversity = dto.university || loan.university || 'DEFAULT';
+      const fixedTuition = tuitionAmounts[currentUniversity.toUpperCase()] || tuitionAmounts['DEFAULT'];
 
-      if (loan.fundingType === FundingType.TUITION) {
+      const currentFundingType = dto.fundingType || loan.fundingType;
+
+      if (currentFundingType === FundingType.TUITION) {
         loan.amountRequested = fixedTuition;
-      } else if (loan.fundingType === FundingType.UPKEEP) {
+      } else if (currentFundingType === FundingType.UPKEEP) {
         loan.amountRequested = UPKEEP_AMOUNT;
-      } else if (loan.fundingType === FundingType.BOTH) {
+      } else if (currentFundingType === FundingType.BOTH) {
         loan.amountRequested = fixedTuition + UPKEEP_AMOUNT;
       }
     }
