@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
+import { NotificationsService } from '../../notifications/src/notifications.service';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
+    private readonly notificationsService: NotificationsService, 
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto, userId: string) {
@@ -18,7 +20,14 @@ export class PaymentsService {
       userId,
       status: 'PENDING',
     });
-    return await this.paymentRepository.save(newPayment);
+    const savedPayment = await this.paymentRepository.save(newPayment);
+
+    await this.notificationsService.createNotification(
+      userId,
+      `Your payment of K${savedPayment.amount} is pending. Reference: ${savedPayment.transactionReference || 'N/A'}`
+    );
+
+    return savedPayment;
   }
 
   async findMyPayments(userId: string) {
@@ -51,7 +60,16 @@ export class PaymentsService {
   async updateStatus(id: string, status: string) {
     const payment = await this.findOne(id);
     payment.status = status;
-    return await this.paymentRepository.save(payment);
+    const updatedPayment = await this.paymentRepository.save(payment);
+
+    if (status === 'SUCCESSFUL' && updatedPayment.userId) {
+      await this.notificationsService.createNotification(
+        updatedPayment.userId,
+        `Your payment of K${updatedPayment.amount} was successful!`
+      );
+    }
+
+    return updatedPayment;
   }
 
   async handleWebhook(payload: PaymentWebhookDto) {
@@ -63,11 +81,19 @@ export class PaymentsService {
 
     if (payment) {
       payment.status = status;
-      await this.paymentRepository.save(payment);
+      const savedPayment = await this.paymentRepository.save(payment);
+
+      if (status === 'SUCCESSFUL' && savedPayment.userId) {
+        await this.notificationsService.createNotification(
+          savedPayment.userId,
+          `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
+        );
+      }
+
       return {
         received: true,
         message: 'Payment status updated via webhook',
-        payment,
+        payment: savedPayment,
       };
     }
 
@@ -76,11 +102,12 @@ export class PaymentsService {
       status,
       amount,
     });
-    await this.paymentRepository.save(newPayment);
+    const savedNewPayment = await this.paymentRepository.save(newPayment);
+    
     return {
       received: true,
       message: 'New payment recorded via webhook',
-      payment: newPayment,
+      payment: savedNewPayment,
     };
   }
 }
