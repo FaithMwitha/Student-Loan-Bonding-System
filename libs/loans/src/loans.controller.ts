@@ -17,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Role } from '@app/common';
+import { Audit, AuditAction, AuditEntity } from '@app/audit';
 import { JwtAuthGuard } from '../../auth/src/jwt/jwtauthguard';
 import { RolesGuard } from '../../auth/src/roles/roles.guard';
 import { Roles } from '../../auth/src/roles/roles.decorators';
@@ -44,6 +45,11 @@ export class LoansController {
   @ApiResponse({ status: 201, description: 'Success! The loan application was created.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @Audit({
+    action: AuditAction.LOAN_APPLICATION_CREATED,
+    entity: AuditEntity.LoanApplication,
+    entityIdFrom: 'response.id',
+  })
   create(@Req() req: AuthRequest, @Body() dto: CreateLoanApplicationDto) {
     return this.loansService.create(req.user.sub, dto);
   }
