@@ -5,6 +5,7 @@ import { ReviewService } from './review.service';
 import { ReviewDecisionDto } from './dto/review-decision.dto';
 import { Role } from '@app/common';
 import { JwtAuthGuard, Roles, RolesGuard } from '@app/auth';
+import { Audit, AuditAction, AuditEntity } from '@app/audit';
 
 @ApiTags('Review')
 @ApiBearerAuth()
@@ -17,6 +18,12 @@ export class ReviewController {
   // Approve or reject a loan application
   @Patch(':loanId')
   @ApiOperation({ summary: 'Approve or reject a loan application' })
+  @Audit({
+    action: AuditAction.LOAN_APPLICATION_REVIEWED,
+    entity: AuditEntity.LoanApplication,
+    entityIdFrom: 'params.loanId',
+    reasonFrom: 'body.rejectionReason',
+  })
   reviewLoan(
     @Param('loanId') loanId: string,
     @Body() dto: ReviewDecisionDto,
