@@ -12,6 +12,9 @@ import { RolesGuard } from './roles/roles.guard';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { Audit } from '@app/audit';
+import { AuditAction } from '@app/audit';
+import { AuditEntity } from '@app/audit';
 
 
 @ApiTags('Auth')
@@ -43,8 +46,14 @@ export class AuthController {
   description: 'Invalid email or password, or account is inactive.',
 })
   @Post('login')
-  
   @HttpCode(HttpStatus.OK)
+  @Audit({
+    action: AuditAction.LOGIN_SUCCESS,
+    entity: AuditEntity.User,
+    actorIdFrom: 'response.user.id',
+    actorRoleFrom: 'response.user.primaryRole',
+    actorEmailFrom: 'response.user.email',
+  })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
   }
@@ -126,6 +135,7 @@ verifyEmail(@Body() dto: VerifyEmailDto) {
   description: 'Invalid or expired password reset OTP.',
 })
  @Put('password')
+    @Audit({ action: AuditAction.PASSWORD_CHANGED, entity: AuditEntity.User, actorEmailFrom: 'body.email' })
     @ApiBody({ schema: { example: { email: 'user@example.com', otp: '123456', newPassword: 'NewPass123!', confirmPassword: 'NewPass123!' } } })
     async resetPassword(
         @Body('email') email: string,
@@ -183,11 +193,11 @@ getMe(@Req() req: Request & { user: { sub: string } }) {
   },
 })
  @Post('logout')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @Audit({ action: AuditAction.LOGOUT, entity: AuditEntity.User })
     async logout() {
         // JWT is stateless — client discards the token
         return { message: 'Logged out successfully' };
     }
-
-
-
 }
