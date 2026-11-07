@@ -4,15 +4,15 @@ import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {
-  // ...name,  email, passwordHash stay the same...
   @Column({ type: 'varchar', length: 255, nullable: false })
   name!: string;
 
   @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
   email!: string;
 
-  @Column({ name: 'email_verified', type: 'timestamptz', nullable: true })
-  emailVerified?: Date | null;
+  
+  @Column({ name: 'email_verified', type: 'boolean', default: false })
+  emailVerified: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   @Exclude()
