@@ -15,9 +15,9 @@ export class NotificationsService {
   }
 
   async send(to: string, subject: string, text: string): Promise<void> {
-    this.logger.log(`📧 FAKE EMAIL SENT TO: ${to}`);
-    this.logger.log(`📝 Subject: ${subject}`);
-    this.logger.log(`🔑 Content: ${text}`);
+    this.logger.log(`FAKE EMAIL SENT TO: ${to}`);
+    this.logger.log(`Subject: ${subject}`);
+    this.logger.log(`Content: ${text}`);
     this.logger.log(`-----------------------------------------`);
   }
 
