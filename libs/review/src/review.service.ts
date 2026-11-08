@@ -52,7 +52,7 @@ export class ReviewService {
 
   // Get pending loans
   async getPendingLoans() {
-    return this.getLoansByStatus('PENDING');
+    return this.getLoansByStatus('SUBMITTED');
   }
 
   // Get loans under review
