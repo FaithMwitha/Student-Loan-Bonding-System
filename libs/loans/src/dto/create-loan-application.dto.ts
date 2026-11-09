@@ -1,130 +1,126 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsOptional, IsNumber, IsArray } from 'class-validator';
+import { 
+  IsEnum, 
+  IsString, 
+  IsOptional, 
+  IsNumber, 
+  IsArray, 
+  IsInt, 
+  Min, 
+  Max 
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { FundingType } from '../enums/funding-type.enum';
 
 export class CreateLoanApplicationDto {
   // --- Personal & Contact ---
-  @ApiProperty({ required: false, example: 'OWSH1R3N' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   nationalId?: string;
 
-  @ApiProperty({ required: false, example: 'Male' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   gender?: string;
 
-  @ApiProperty({ required: false, example: 'Single' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   maritalStatus?: string;
 
-  @ApiProperty({ required: false, example: '2003-09-21' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   dateOfBirth?: string;
 
-  @ApiProperty({ required: false, example: '0985053589' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   phoneNumber?: string;
 
-  @ApiProperty({ required: false, example: 'Box 22 Mvera Dowa' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   postalAddress?: string;
 
   // --- Guarantor & Next of Kin ---
-  @ApiProperty({ required: false, example: 'Nachulu Chunga' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   guarantorName?: string;
 
-  @ApiProperty({ required: false, example: '0995486773' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   guarantorPhone?: string;
 
-  @ApiProperty({ required: false, example: 'Chidothi, Dowa' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   guarantorAddress?: string;
 
-  @ApiProperty({ required: false, example: 'Ruth chibwira' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   nextOfKinName?: string;
 
-  @ApiProperty({ required: false, example: '0991458535' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   nextOfKinPhone?: string;
 
   // --- Bank Details ---
-  @ApiProperty({ required: false, example: 'National Bank of Malawi' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   bankName?: string;
 
-  @ApiProperty({ required: false, example: 'PAUL NANGANTANI' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   bankAccountName?: string;
 
-  @ApiProperty({ required: false, example: '1013436297' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   bankAccountNumber?: string;
 
-  @ApiProperty({ required: false, example: 'Zomba Service Centre' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   bankBranch?: string;
 
   // --- Academic & Statement ---
-  @ApiProperty({ required: false, example: 'Bachelor Of Education (computer Science)' })
-  @IsOptional()
-  @IsString()
-  programme?: string;
+  @ApiProperty({ 
+    example: 1, 
+    minimum: 1, 
+    maximum: 5, 
+    description: 'Year of study (1 to 5)' 
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  yearOfStudy: number;
 
-  @ApiProperty({ required: false, example: 3 })
-  @IsOptional()
-  @IsNumber()
-  yearOfStudy?: number;
-
-  @ApiProperty({ required: false, example: 'I am requesting this loan because...' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
   personalStatement?: string;
 
-    // --- Documents ---
+  // --- Documents ---
   @ApiProperty({ 
     required: false, 
     type: [String], 
-    example: [
-      'Applicant National ID.pdf',
-      'Guarantor National ID.pdf',
-      'Map to Home of Origin.jpg',
-      'Guarantor Consent Form.pdf',
-      'Bank Deposit Slip.pdf',
-      'Affidavit.pdf'
-    ] 
+    example: ['string'] 
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   documents?: string[];
 
-  // --- FINAL STEP: UNIVERSITY & FUNDING TYPE ---
-  @ApiProperty({
-    required: false,
-    example: 'UNIMA',
-    description: 'The university the student is attending (Final step)',
-  })
-  @IsOptional()
-  @IsString()
-  university?: string;
-
+  // --- FINAL STEP: FUNDING TYPE ---
   @ApiProperty({
     required: false,
     enum: FundingType,

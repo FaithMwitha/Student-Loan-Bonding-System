@@ -13,7 +13,8 @@ import {
   ApiBearerAuth, 
   ApiOperation, 
   ApiTags, 
-  ApiResponse 
+  ApiResponse,
+  ApiBody
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Role } from '@app/common';
@@ -84,6 +85,7 @@ export class LoansController {
     summary: 'Update a pending loan application',
     description: 'Allows a student to fix typos or update details before the loan is reviewed.'
   })
+  @ApiBody({ type: CreateLoanApplicationDto, required: false }) // <--- THIS FORCES THE BOX TO APPEAR
   @ApiResponse({ status: 200, description: 'Application updated successfully' })
   @ApiResponse({ status: 400, description: 'Cannot update an application that is already under review or finalized' })
   @ApiResponse({ status: 404, description: 'Not Found.' })

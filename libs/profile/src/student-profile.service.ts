@@ -5,6 +5,7 @@ import { StudentProfile } from './entities/student-profile.entity';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { toStudentProfileResponse } from './student-profile.mapper';
 import { StudentFilterDto } from './dto/student-filter.dto';
+
 @Injectable()
 export class StudentProfileService {
   constructor(
@@ -21,6 +22,7 @@ export class StudentProfileService {
   async getMine(userId: string) {
     return toStudentProfileResponse(await this.find(userId));
   }
+
   async search(f: StudentFilterDto) {
     const qb = this.repo.createQueryBuilder('p');
     if (f.university) qb.andWhere('p.university = :uni', { uni: f.university });
@@ -59,13 +61,12 @@ export class StudentProfileService {
 
   async updateMine(userId: string, dto: UpdateStudentProfileDto) {
     const profile = await this.find(userId);
-    // pick fields one by one: no Object.assign of a request body onto an entity
+    
     if (dto.phone !== undefined) profile.phone = dto.phone;
     if (dto.bankName !== undefined) profile.bankName = dto.bankName;
     if (dto.bankAccountNumber !== undefined)
       profile.bankAccountNumber = dto.bankAccountNumber;
-    if (dto.programme !== undefined) profile.programme = dto.programme;
-    if (dto.yearOfStudy !== undefined) profile.yearOfStudy = dto.yearOfStudy;
+
     return toStudentProfileResponse(await this.repo.save(profile));
   }
 }

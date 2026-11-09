@@ -11,6 +11,7 @@ import { ProfileModule } from '@app/profile';
 import { PaymentsModule } from '@app/payments';
 import { ReviewModule } from '@app/review';
 import { AccountManagementModule } from '@app/account-management';
+import { UniversitiesModule } from '../../../libs/universities/src/universities.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AccountManagementModule } from '@app/account-management';
     PaymentsModule,
     ReviewModule,
     AccountManagementModule,
+    UniversitiesModule,
   ],
 })
 export class ApiModule {}
