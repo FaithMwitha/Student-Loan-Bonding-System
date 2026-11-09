@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LoanApplication } from './entities/loan-application.entity';
@@ -6,25 +6,33 @@ import { CreateLoanApplicationDto } from './dto/create-loan-application.dto';
 import { FilterLoansDto } from './dto/filter-loans.dto'; 
 import { ApplicationStatus } from './enums/application-status.enum';
 import { FundingType } from './enums/funding-type.enum';
+import { StudentProfile } from '../../profile/src/entities/student-profile.entity';
+import { UsersService } from '../../users/src/users.service';
+import { UniversitiesService } from '../../universities/src/universities.service';
 
 @Injectable()
 export class LoansService {
   constructor(
     @InjectRepository(LoanApplication)
     private readonly loanRepo: Repository<LoanApplication>,
+    
+    @InjectRepository(StudentProfile)
+    private readonly profileRepo: Repository<StudentProfile>,
+
+    private readonly usersService: UsersService,
+    private readonly universitiesService: UniversitiesService,
   ) {}
 
   async create(studentId: string, dto: CreateLoanApplicationDto) {
-    const UPKEEP_AMOUNT = 560000;
-    
-    const tuitionAmounts: Record<string, number> = {
-      'UNIMA': 1300000,
-      'MZUNI': 1100000,
-      'MUST': 1500000,
-      'DEFAULT': 1000000, 
-    };
+    const profile = await this.profileRepo.findOne({ where: { userId: studentId } });
+    if (!profile) {
+      throw new ForbiddenException('You must complete student registration before applying for a loan.');
+    }
 
-    const fixedTuition = tuitionAmounts[dto.university?.toUpperCase() || ''] || tuitionAmounts['DEFAULT'];
+    const university = await this.universitiesService.findOneByName(profile.university);
+
+    const UPKEEP_AMOUNT = 560000;
+    const fixedTuition = university.tuitionFee;
     
     let finalAmount = 0;
 
@@ -39,11 +47,20 @@ export class LoansService {
     const loan = this.loanRepo.create({
       ...dto,
       studentId,
+      university: profile.university,
+      programme: profile.programme ?? undefined,
       amountRequested: finalAmount, 
       status: ApplicationStatus.PENDING_PAYMENT,
     });
     
-    return this.loanRepo.save(loan);
+    const savedLoan = await this.loanRepo.save(loan);
+
+    const user = await this.usersService.findById(studentId);
+
+    return {
+      ...savedLoan,
+      applicantName: user.name,
+    };
   }
 
   async findMyApplications(studentId: string, filterDto: FilterLoansDto) {
@@ -73,10 +90,15 @@ export class LoansService {
 
     const skip = (page - 1) * limit;
     queryBuilder.skip(skip).take(limit);
-
     queryBuilder.orderBy('loan.createdAt', 'DESC');
 
-    return queryBuilder.getMany();
+    const loans = await queryBuilder.getMany();
+    const user = await this.usersService.findById(studentId);
+
+    return loans.map((loan) => ({
+      ...loan,
+      applicantName: user.name,
+    }));
   }
 
   async findOne(id: string, studentId: string) {
@@ -86,42 +108,81 @@ export class LoansService {
     if (!loan) {
       throw new NotFoundException('Loan application not found');
     }
-    return loan;
+
+    const user = await this.usersService.findById(studentId);
+
+    return {
+      ...loan,
+      applicantName: user.name,
+    };
   }
 
   async updateApplication(id: string, studentId: string, dto: Partial<CreateLoanApplicationDto>) {
-    const loan = await this.findOne(id, studentId);
+    const existingLoan = await this.loanRepo.findOne({ where: { id, studentId } });
+    
+    if (!existingLoan) {
+      throw new NotFoundException('Loan application not found');
+    }
 
     if (
-      loan.status === ApplicationStatus.UNDER_REVIEW || 
-      loan.status === ApplicationStatus.APPROVED || 
-      loan.status === ApplicationStatus.REJECTED
+      existingLoan.status === ApplicationStatus.UNDER_REVIEW || 
+      existingLoan.status === ApplicationStatus.APPROVED || 
+      existingLoan.status === ApplicationStatus.REJECTED
     ) {
       throw new BadRequestException('Cannot update an application that is already under review or finalized.');
     }
 
-    Object.assign(loan, dto);
+    const safeDto = dto || {};
 
-    if (dto.university || dto.fundingType) {
+    if (safeDto.nationalId !== undefined) existingLoan.nationalId = safeDto.nationalId;
+    if (safeDto.gender !== undefined) existingLoan.gender = safeDto.gender;
+    if (safeDto.maritalStatus !== undefined) existingLoan.maritalStatus = safeDto.maritalStatus;
+    
+    // Safe date check
+    if (safeDto.dateOfBirth !== undefined) {
+      const parsedDate = new Date(safeDto.dateOfBirth);
+      if (!isNaN(parsedDate.getTime())) {
+        existingLoan.dateOfBirth = parsedDate;
+      }
+    }
+    
+    if (safeDto.phoneNumber !== undefined) existingLoan.phoneNumber = safeDto.phoneNumber;
+    if (safeDto.postalAddress !== undefined) existingLoan.postalAddress = safeDto.postalAddress;
+    if (safeDto.guarantorName !== undefined) existingLoan.guarantorName = safeDto.guarantorName;
+    if (safeDto.guarantorPhone !== undefined) existingLoan.guarantorPhone = safeDto.guarantorPhone;
+    if (safeDto.guarantorAddress !== undefined) existingLoan.guarantorAddress = safeDto.guarantorAddress;
+    if (safeDto.nextOfKinName !== undefined) existingLoan.nextOfKinName = safeDto.nextOfKinName;
+    if (safeDto.nextOfKinPhone !== undefined) existingLoan.nextOfKinPhone = safeDto.nextOfKinPhone;
+    if (safeDto.bankName !== undefined) existingLoan.bankName = safeDto.bankName;
+    if (safeDto.bankAccountName !== undefined) existingLoan.bankAccountName = safeDto.bankAccountName;
+    if (safeDto.bankAccountNumber !== undefined) existingLoan.bankAccountNumber = safeDto.bankAccountNumber;
+    if (safeDto.bankBranch !== undefined) existingLoan.bankBranch = safeDto.bankBranch;
+    if (safeDto.yearOfStudy !== undefined) existingLoan.yearOfStudy = safeDto.yearOfStudy;
+    if (safeDto.personalStatement !== undefined) existingLoan.personalStatement = safeDto.personalStatement;
+    if (safeDto.documents !== undefined) existingLoan.documents = safeDto.documents;
+
+    if (safeDto.fundingType !== undefined && safeDto.fundingType !== existingLoan.fundingType) {
+      const university = await this.universitiesService.findOneByName(existingLoan.university || '');
       const UPKEEP_AMOUNT = 560000;
-      const tuitionAmounts: Record<string, number> = {
-        'UNIMA': 1300000, 'MZUNI': 1100000, 'MUST': 1500000, 'DEFAULT': 1000000, 
-      };
-      
-      const currentUniversity = dto.university || loan.university || 'DEFAULT';
-      const fixedTuition = tuitionAmounts[currentUniversity.toUpperCase()] || tuitionAmounts['DEFAULT'];
+      const fixedTuition = university.tuitionFee;
 
-      const currentFundingType = dto.fundingType || loan.fundingType;
+      existingLoan.fundingType = safeDto.fundingType;
 
-      if (currentFundingType === FundingType.TUITION) {
-        loan.amountRequested = fixedTuition;
-      } else if (currentFundingType === FundingType.UPKEEP) {
-        loan.amountRequested = UPKEEP_AMOUNT;
-      } else if (currentFundingType === FundingType.BOTH) {
-        loan.amountRequested = fixedTuition + UPKEEP_AMOUNT;
+      if (safeDto.fundingType === FundingType.TUITION) {
+        existingLoan.amountRequested = fixedTuition;
+      } else if (safeDto.fundingType === FundingType.UPKEEP) {
+        existingLoan.amountRequested = UPKEEP_AMOUNT;
+      } else if (safeDto.fundingType === FundingType.BOTH) {
+        existingLoan.amountRequested = fixedTuition + UPKEEP_AMOUNT;
       }
     }
 
-    return this.loanRepo.save(loan);
+    const savedLoan = await this.loanRepo.save(existingLoan);
+    const user = await this.usersService.findById(studentId);
+
+    return {
+      ...savedLoan,
+      applicantName: user.name,
+    };
   }
 }
