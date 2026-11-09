@@ -15,7 +15,7 @@ export class FilterLoansDto {
   @IsEnum(FundingType)
   fundingType?: FundingType;
 
-  @ApiPropertyOptional({ description: 'Filter by university', example: 'UNIMA' })
+  @ApiPropertyOptional({ description: 'Filter by university' })
   @IsOptional()
   @IsString()
   university?: string;
