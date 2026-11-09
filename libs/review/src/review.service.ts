@@ -43,29 +43,28 @@ export class ReviewService {
     return { message: `Loan successfully ${status}` };
   }
 
-  // Get loans according to their status
+  async getAllLoans() {
+    return this.loanRepo.find();
+  }
+
   async getLoansByStatus(status: string) {
     return this.loanRepo.find({
       where: { status } as any,
     });
   }
 
-  // Get pending loans
   async getPendingLoans() {
     return this.getLoansByStatus('PENDING');
   }
 
-  // Get loans under review
   async getLoansUnderReview() {
     return this.getLoansByStatus('UNDER_REVIEW');
   }
 
-  // Get rejected loans
   async getRejectedLoans() {
     return this.getLoansByStatus('REJECTED');
   }
 
-  // Get accepted loans
   async getAcceptedLoans() {
     return this.getLoansByStatus('APPROVED');
   }

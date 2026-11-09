@@ -1,6 +1,19 @@
 
-import { Controller, Patch, Param, Body, UseGuards, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Get,
+} from '@nestjs/common';
+
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+
 import { ReviewService } from './review.service';
 import { ReviewDecisionDto } from './dto/review-decision.dto';
 import { Role } from '@app/common';
@@ -26,6 +39,13 @@ export class ReviewController {
       dto.status,
       dto.rejectionReason,
     );
+  }
+
+  // Get all loan applications
+  @Get('loans')
+  @ApiOperation({ summary: 'Get all loan applications' })
+  getAllLoans() {
+    return this.reviewService.getAllLoans();
   }
 
   // Get pending loans

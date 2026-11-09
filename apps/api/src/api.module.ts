@@ -1,14 +1,18 @@
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { ApiController } from './api.controller';
+import { ApiService } from './api.service';
+
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
-import { LoansModule } from '@app/loans';
-import { NotificationsModule } from '@app/notifications';
 import { ProfileModule } from '@app/profile';
-import { PaymentsModule } from '@app/payments';
+import { LoansModule } from '@app/loans';
 import { ReviewModule } from '@app/review';
+import { NotificationsModule } from '@app/notifications';
+import { PaymentsModule } from '@app/payments';
 import { VerificationModule } from '@app/verification';
 import { AccountManagementModule } from '@app/account-management';
 
@@ -30,21 +34,21 @@ import { AccountManagementModule } from '@app/account-management';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
-
-        // Development only: automatically creates/updates entity tables.
         synchronize: process.env.NODE_ENV !== 'production',
       }),
     }),
 
     CommonModule,
     AuthModule,
-    LoansModule,
-    NotificationsModule,
     ProfileModule,
-    PaymentsModule,
+    LoansModule,
     ReviewModule,
+    NotificationsModule,
+    PaymentsModule,
     VerificationModule,
     AccountManagementModule,
   ],
+  controllers: [ApiController],
+  providers: [ApiService],
 })
 export class ApiModule {}
