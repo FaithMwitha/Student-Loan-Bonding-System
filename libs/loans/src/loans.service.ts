@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { LoanApplication } from './entities/loan-application.entity';
 import { CreateLoanApplicationDto } from './dto/create-loan-application.dto';
 import { FilterLoansDto } from './dto/filter-loans.dto'; 
@@ -29,6 +29,20 @@ export class LoansService {
       throw new ForbiddenException('You must complete student registration before applying for a loan.');
     }
 
+    const existingLoanForYear = await this.loanRepo.findOne({
+      where: {
+        studentId: studentId,
+        yearOfStudy: dto.yearOfStudy,
+        status: Not(ApplicationStatus.REJECTED),
+      },
+    });
+
+    if (existingLoanForYear) {
+      throw new BadRequestException(
+        `You already have an active or completed loan application for Year ${dto.yearOfStudy}. You cannot apply again for the same year.`
+      );
+    }
+
     const university = await this.universitiesService.findOneByName(profile.university);
 
     const UPKEEP_AMOUNT = 560000;
@@ -54,7 +68,6 @@ export class LoansService {
     });
     
     const savedLoan = await this.loanRepo.save(loan);
-
     const user = await this.usersService.findById(studentId);
 
     return {
@@ -134,11 +147,27 @@ export class LoansService {
 
     const safeDto = dto || {};
 
+    if (safeDto.yearOfStudy !== undefined && safeDto.yearOfStudy !== existingLoan.yearOfStudy) {
+      const duplicateYear = await this.loanRepo.findOne({
+        where: {
+          studentId: studentId,
+          yearOfStudy: safeDto.yearOfStudy,
+          status: Not(ApplicationStatus.REJECTED),
+          id: Not(existingLoan.id),
+        },
+      });
+
+      if (duplicateYear) {
+        throw new BadRequestException(
+          `You already have an active loan application for Year ${safeDto.yearOfStudy}. You cannot change this application to a year you have already applied for.`
+        );
+      }
+    }
+
     if (safeDto.nationalId !== undefined) existingLoan.nationalId = safeDto.nationalId;
     if (safeDto.gender !== undefined) existingLoan.gender = safeDto.gender;
     if (safeDto.maritalStatus !== undefined) existingLoan.maritalStatus = safeDto.maritalStatus;
     
-    // Safe date check
     if (safeDto.dateOfBirth !== undefined) {
       const parsedDate = new Date(safeDto.dateOfBirth);
       if (!isNaN(parsedDate.getTime())) {
