@@ -25,6 +25,7 @@ import { Roles } from '../../auth/src/roles/roles.decorators';
 import { LoansService } from './loans.service';
 import { CreateLoanApplicationDto } from './dto/create-loan-application.dto';
 import { FilterLoansDto } from './dto/filter-loans.dto';
+import { UpdateLoanApplicationDto } from './dto/update-loan-application.dto';
 
 interface AuthRequest extends Request {
   user: { sub: string; role: Role };
