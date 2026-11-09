@@ -30,7 +30,6 @@ export class StudentRegistrationService {
             registrationNumber: dto.registrationNumber ?? null,
             university: dto.university,
             programme: dto.programme ?? null,
-            yearOfStudy: dto.yearOfStudy ?? null,
           }),
         );
         return toStudentProfileResponse(profile);
