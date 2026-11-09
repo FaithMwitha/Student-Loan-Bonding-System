@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Matches, Max, Min, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { MANEB_ID_PATTERN, REGISTRATION_NUMBER_PATTERN } from '../constants/identifiers';
 
 const clean = ({ value }: { value: unknown }) =>
@@ -23,5 +23,4 @@ export class RegisterStudentDto {
 
   @ApiProperty() @Transform(clean) @IsString() @IsNotEmpty() university: string;
   @ApiPropertyOptional() @IsOptional() @Transform(clean) @IsString() programme?: string;
-  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(1) @Max(8) yearOfStudy?: number;
 }
