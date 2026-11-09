@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
+import { LoanApplication } from '@app/loans';
+import { ApplicationStatus } from '@app/loans';
 import { NotificationsService } from '../../notifications/src/notifications.service';
 
 @Injectable()
@@ -11,7 +13,9 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
-    private readonly notificationsService: NotificationsService, 
+    private readonly notificationsService: NotificationsService,
+    @InjectRepository(LoanApplication)
+    private readonly loanRepository: Repository<LoanApplication>,
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto, userId: string) {
@@ -62,7 +66,7 @@ export class PaymentsService {
     payment.status = status;
     const updatedPayment = await this.paymentRepository.save(payment);
 
-    if (status === 'SUCCESSFUL' && updatedPayment.userId) {
+    if (status === 'COMPLETED' && updatedPayment.userId) {
       await this.notificationsService.createNotification(
         updatedPayment.userId,
         `Your payment of K${updatedPayment.amount} was successful!`
@@ -83,7 +87,15 @@ export class PaymentsService {
       payment.status = status;
       const savedPayment = await this.paymentRepository.save(payment);
 
-      if (status === 'SUCCESSFUL' && savedPayment.userId) {
+      // Auto-unlock loan for review after successful payment
+      if (status === 'COMPLETED' && savedPayment.applicationId) {
+        await this.loanRepository.update(
+          { id: savedPayment.applicationId },
+          { status: ApplicationStatus.SUBMITTED },
+        );
+      }
+
+      if (status === 'COMPLETED' && savedPayment.userId) {
         await this.notificationsService.createNotification(
           savedPayment.userId,
           `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
