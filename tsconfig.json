@@ -11,10 +11,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
-    "types": [
-      "node",
-      "jest"
-    ],
+    "types": ["node", "jest"],
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": ".",
@@ -23,39 +20,18 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "paths": {
-      "@app/account-management": [
-        "./libs/account-management/src"
-      ],
-      "@app/audit": [
-        "./libs/audit/src"
-      ],
-      "@app/auth": [
-        "./libs/auth/src"
-      ],
-      "@app/common": [
-        "./libs/common/src"
-      ],
-      "@app/loans": [
-        "./libs/loans/src"
-      ],
-      "@app/notifications": [
-        "./libs/notifications/src"
-      ],
-      "@app/payments": [
-        "./libs/payments/src"
-      ],
-      "@app/profile": [
-        "./libs/profile/src"
-      ],
-      "@app/review": [
-        "./libs/review/src"
-      ],
-      "@app/users": [
-        "./libs/users/src"
-      ],
-      "@app/verification": [
-        "./libs/verification/src"
-      ]
+      "@app/account-management": ["./libs/account-management/src"],
+      "@app/audit": ["./libs/audit/src"],
+      "@app/auth": ["./libs/auth/src"],
+      "@app/common": ["./libs/common/src"],
+      "@app/loans": ["./libs/loans/src"],
+      "@app/notifications": ["./libs/notifications/src"],
+      "@app/payments": ["./libs/payments/src"],
+      "@app/profile": ["./libs/profile/src"],
+      "@app/review": ["./libs/review/src"],
+      "@app/users": ["./libs/users/src"],
+      "@app/universities": ["./libs/universities/src"],
+      "@app/verification": ["./libs/verification/src"]
     }
   },
   "files": [],
