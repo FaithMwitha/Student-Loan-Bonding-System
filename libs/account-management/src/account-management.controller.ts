@@ -5,6 +5,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Role } from '@app/common';
 import { JwtAuthGuard, RolesGuard, Roles } from '@app/auth';
+import { Audit, AuditAction, AuditEntity } from '@app/audit';
 import { AccountManagementService } from './account-management.service';
 import { CreateOfficerDto } from './dto/create-officer.dto';
 import { UpdateAccountStatusDto } from './dto/update-account-status.dto';
@@ -24,6 +25,11 @@ export class AccountManagementController {
   @ApiOperation({ summary: 'Create a new officer account' })
   @Post('officers')
   @HttpCode(HttpStatus.CREATED)
+  @Audit({
+    action: AuditAction.OFFICER_ACCOUNT_CREATED,
+    entity: AuditEntity.User,
+    entityIdFrom: 'response.user.id',
+  })
   createOfficer(@Body() dto: CreateOfficerDto) {
     return this.service.createOfficer(dto);
   }
@@ -36,6 +42,11 @@ export class AccountManagementController {
 
   @ApiOperation({ summary: 'Update user account status' })
   @Patch('users/:id/status')
+  @Audit({
+    action: AuditAction.ACCOUNT_STATUS_CHANGED,
+    entity: AuditEntity.User,
+    entityIdFrom: 'params.id',
+  })
   setStatus(
     @Req() req: AuthRequest,
     @Param('id', ParseUUIDPipe) id: string,

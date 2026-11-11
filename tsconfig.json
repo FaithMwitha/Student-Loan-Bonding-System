@@ -26,6 +26,9 @@
       "@app/account-management": [
         "./libs/account-management/src"
       ],
+      "@app/audit": [
+        "./libs/audit/src"
+      ],
       "@app/auth": [
         "./libs/auth/src"
       ],

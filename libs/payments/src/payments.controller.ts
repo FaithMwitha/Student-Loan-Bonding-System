@@ -24,6 +24,7 @@ import { Role } from '@app/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
+import { Audit, AuditAction, AuditEntity } from '@app/audit';
 
 @ApiTags('Payments')
 @ApiBearerAuth()
@@ -38,6 +39,11 @@ export class PaymentsController {
   @ApiResponse({ status: 201, description: 'Payment created successfully' })
   @ApiResponse({ status: 400, description: 'Validation error — amount must be exactly K10,000' })
   @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
+  @Audit({
+    action: AuditAction.PAYMENT_CREATED,
+    entity: AuditEntity.Payment,
+    entityIdFrom: "response.id",
+  })
   create(
     @Body() dto: CreatePaymentDto,
     @Req() req: { user: { sub: string } },
@@ -99,6 +105,11 @@ export class PaymentsController {
   @ApiBody({ type: PaymentWebhookDto })
   @ApiResponse({ status: 200, description: 'Webhook processed' })
   @ApiResponse({ status: 400, description: 'Invalid payload' })
+  @Audit({
+    action: AuditAction.PAYMENT_WEBHOOK_RECEIVED,
+    entity: AuditEntity.Payment,
+    entityIdFrom: 'body.transactionReference',
+  })
   handleWebhook(@Body() payload: PaymentWebhookDto) {
     return this.paymentsService.handleWebhook(payload);
   }

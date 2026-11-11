@@ -2,10 +2,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { ApiController } from './api.controller';
 import { ApiService } from './api.service';
-
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
 import { ProfileModule } from '@app/profile';
@@ -13,8 +11,10 @@ import { LoansModule } from '@app/loans';
 import { ReviewModule } from '@app/review';
 import { NotificationsModule } from '@app/notifications';
 import { PaymentsModule } from '@app/payments';
-import { VerificationModule } from '@app/verification';
+
 import { AccountManagementModule } from '@app/account-management';
+import { AuditModule } from '../../../libs/audit/src/audit.module';
+import { UniversitiesModule } from '../../../libs/universities/src/universities.module';
 
 @Module({
   imports: [
@@ -40,13 +40,14 @@ import { AccountManagementModule } from '@app/account-management';
 
     CommonModule,
     AuthModule,
+    AuditModule,
     ProfileModule,
     LoansModule,
     ReviewModule,
     NotificationsModule,
     PaymentsModule,
-    VerificationModule,
     AccountManagementModule,
+    UniversitiesModule,
   ],
   controllers: [ApiController],
   providers: [ApiService],

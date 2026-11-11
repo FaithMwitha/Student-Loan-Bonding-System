@@ -19,6 +19,11 @@ export class LoanApplication {
   @Column({ name: 'student_id' })
   studentId: string;
 
+
+  @ApiProperty({ required: false })
+  @Column({ nullable: true })
+  university?: string;
+
   @ApiProperty({ enum: FundingType })
   @Column({ type: 'enum', enum: FundingType, name: 'funding_type' })
   fundingType: FundingType;

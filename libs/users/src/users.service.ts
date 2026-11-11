@@ -81,7 +81,7 @@ export class UsersService {
 
   async markEmailVerified(id: string) {
     const user = await this.findById(id);
-    user.emailVerified = new Date();
+    user.emailVerified = true;
     return this.userRepository.save(user);
   }
   async setPasswordResetCode(
