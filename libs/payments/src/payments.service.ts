@@ -4,18 +4,20 @@ import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
-import { LoanApplication } from '@app/loans';
-import { ApplicationStatus } from '@app/loans';
 import { NotificationsService } from '../../notifications/src/notifications.service';
+import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
+import { ApplicationStatus } from '../../loans/src/enums/application-status.enum';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
-    private readonly notificationsService: NotificationsService,
+    
     @InjectRepository(LoanApplication)
-    private readonly loanRepository: Repository<LoanApplication>,
+    private readonly loanRepo: Repository<LoanApplication>, // <-- ADDED
+
+    private readonly notificationsService: NotificationsService, 
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto, userId: string) {
@@ -66,11 +68,21 @@ export class PaymentsService {
     payment.status = status;
     const updatedPayment = await this.paymentRepository.save(payment);
 
-    if (status === 'COMPLETED' && updatedPayment.userId) {
-      await this.notificationsService.createNotification(
-        updatedPayment.userId,
-        `Your payment of K${updatedPayment.amount} was successful!`
-      );
+    if (status === 'SUCCESSFUL') {
+      if (updatedPayment.userId) {
+        await this.notificationsService.createNotification(
+          updatedPayment.userId,
+          `Your payment of K${updatedPayment.amount} was successful!`
+        );
+      }
+
+      // Automatically update the Loan Application status
+      if (updatedPayment.applicationId) {
+        await this.loanRepo.update(
+          { id: updatedPayment.applicationId },
+          { status: ApplicationStatus.SUBMITTED }
+        );
+      }
     }
 
     return updatedPayment;
@@ -87,19 +99,21 @@ export class PaymentsService {
       payment.status = status;
       const savedPayment = await this.paymentRepository.save(payment);
 
-      // Auto-unlock loan for review after successful payment
-      if (status === 'COMPLETED' && savedPayment.applicationId) {
-        await this.loanRepository.update(
-          { id: savedPayment.applicationId },
-          { status: ApplicationStatus.SUBMITTED },
-        );
-      }
+      if (status === 'SUCCESSFUL') {
+        if (savedPayment.userId) {
+          await this.notificationsService.createNotification(
+            savedPayment.userId,
+            `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
+          );
+        }
 
-      if (status === 'COMPLETED' && savedPayment.userId) {
-        await this.notificationsService.createNotification(
-          savedPayment.userId,
-          `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
-        );
+        // Automatically update the Loan Application status
+        if (savedPayment.applicationId) {
+          await this.loanRepo.update(
+            { id: savedPayment.applicationId },
+            { status: ApplicationStatus.SUBMITTED }
+          );
+        }
       }
 
       return {
