@@ -75,26 +75,27 @@ export class AuthService {
     return otpCode;
   }
 
-  async requestOtp(email: string) {
-    const user = await this.usersService.findByEmail(email);
+  async requestPasswordResetOtp(email: string) {
+  const user = await this.usersService.findByEmail(email);
 
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-
-    if (user.emailVerified) {
-      throw new BadRequestException('Email is already verified');
-    }
-
-    const otp = await this.generateOtp(user.id, Verification.EMAIL_VERIFICATION);
-
-    
-    await this.notificationsService.sendOtpEmail(email, otp);
-
+  // Return a generic response to avoid revealing registered emails
+  if (!user) {
     return {
-      message: 'Verification OTP sent to your email',
+      message: 'If an account exists with this email, a password reset OTP will be sent.',
     };
   }
+
+  const otp = await this.generateOtp(
+    user.id,
+    Verification.PASSWORD_RESET,
+  );
+
+  await this.notificationsService.sendOtpEmail(email, otp);
+
+  return {
+    message: 'If an account exists with this email, a password reset OTP will be sent.',
+  };
+}
 
   async verifyEmail(email: string, code: string) {
     const user = await this.usersService.findByEmail(email);
@@ -135,29 +136,52 @@ export class AuthService {
     return bcrypt.compare(otp, verification.otpCodeHash);
   }
 
-  async resetPassword(email: string, otp: string, newPassword: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) throw new BadRequestException('Invalid or expired OTP');
+  async resetPassword(
+  email: string,
+  otp: string,
+  newPassword: string,
+) {
+  const user = await this.usersService.findByEmail(email);
 
-    const verification = await this.verificationRepository.findOne({
-      where: { userId: user.id, purpose: Verification.PASSWORD_RESET, isUsed: false },
-      order: { createdAt: 'DESC' },
-    });
-
-    if (!verification || verification.expiresAt.getTime() < Date.now()) {
-      throw new BadRequestException('Invalid or expired OTP');
-    }
-
-    const isValid = await bcrypt.compare(otp, verification.otpCodeHash);
-    if (!isValid) throw new BadRequestException('Invalid or expired OTP');
-
-    const passwordHash = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.update(user.id, { passwordHash });
-    await this.verificationRepository.update(verification.id, { isUsed: true });
-
-    return { message: 'Password reset successfully' };
+  if (!user) {
+    throw new UnauthorizedException('Invalid or expired OTP');
   }
 
+  const verification = await this.verificationRepository.findOne({
+    where: {
+      userId: user.id,
+      purpose: Verification.PASSWORD_RESET,
+      isUsed: false,
+    },
+    order: { createdAt: 'DESC' },
+  });
+
+  if (!verification || verification.expiresAt.getTime() < Date.now()) {
+    throw new UnauthorizedException('Invalid or expired OTP');
+  }
+
+  const isValid = await bcrypt.compare(
+    otp,
+    verification.otpCodeHash,
+  );
+
+  if (!isValid) {
+    throw new UnauthorizedException('Invalid or expired OTP');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await this.userRepository.update(user.id, { passwordHash });
+
+  await this.verificationRepository.update(
+    verification.id,
+    { isUsed: true },
+  );
+
+  return {
+    message: 'Password reset successfully',
+  };
+}
   private toPublicUser(user: any) {
     return {
       id: user.id,
