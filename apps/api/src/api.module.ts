@@ -1,16 +1,19 @@
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { ApiController } from './api.controller';
+import { ApiService } from './api.service';
 import { CommonModule } from '@app/common';
 import { AuthModule } from '@app/auth';
-import { AuditModule } from '../../../libs/audit/src/audit.module';
-import { LoansModule } from '@app/loans';
-import { NotificationsModule } from '@app/notifications';
 import { ProfileModule } from '@app/profile';
-import { PaymentsModule } from '@app/payments';
+import { LoansModule } from '@app/loans';
 import { ReviewModule } from '@app/review';
+import { NotificationsModule } from '@app/notifications';
+import { PaymentsModule } from '@app/payments';
+
 import { AccountManagementModule } from '@app/account-management';
+import { AuditModule } from '../../../libs/audit/src/audit.module';
 import { UniversitiesModule } from '../../../libs/universities/src/universities.module';
 
 @Module({
@@ -31,8 +34,6 @@ import { UniversitiesModule } from '../../../libs/universities/src/universities.
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
-
-        // Development only: automatically creates/updates entity tables.
         synchronize: process.env.NODE_ENV !== 'production',
       }),
     }),
@@ -40,13 +41,15 @@ import { UniversitiesModule } from '../../../libs/universities/src/universities.
     CommonModule,
     AuthModule,
     AuditModule,
-    LoansModule,
-    NotificationsModule,
     ProfileModule,
-    PaymentsModule,
+    LoansModule,
     ReviewModule,
+    NotificationsModule,
+    PaymentsModule,
     AccountManagementModule,
     UniversitiesModule,
   ],
+  controllers: [ApiController],
+  providers: [ApiService],
 })
 export class ApiModule {}
