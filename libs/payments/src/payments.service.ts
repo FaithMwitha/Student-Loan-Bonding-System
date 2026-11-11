@@ -6,6 +6,7 @@ import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
 import { LoanApplication } from '@app/loans';
 import { ApplicationStatus } from '@app/loans';
+import { randomUUID } from 'crypto';
 import { NotificationsService } from '../../notifications/src/notifications.service';
 
 @Injectable()
@@ -19,16 +20,19 @@ export class PaymentsService {
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto, userId: string) {
+    const transactionReference = `PAY-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+
     const newPayment = this.paymentRepository.create({
       ...createPaymentDto,
       userId,
       status: 'PENDING',
+      transactionReference,
     });
     const savedPayment = await this.paymentRepository.save(newPayment);
 
     await this.notificationsService.createNotification(
       userId,
-      `Your payment of K${savedPayment.amount} is pending. Reference: ${savedPayment.transactionReference || 'N/A'}`
+      `Your payment of K${savedPayment.amount} is pending. Reference: ${savedPayment.transactionReference}`
     );
 
     return savedPayment;
