@@ -23,7 +23,7 @@ export class LoansService {
     private readonly universitiesService: UniversitiesService,
   ) {}
 
-  async create(studentId: string, dto: CreateLoanApplicationDto) {
+  async create(studentId: string, dto: CreateLoanApplicationDto, documentPaths: string[] = []) {
     const profile = await this.profileRepo.findOne({ where: { userId: studentId } });
     if (!profile) {
       throw new ForbiddenException('You must complete student registration before applying for a loan.');
@@ -43,6 +43,22 @@ export class LoansService {
       );
     }
 
+    if (dto.yearOfStudy > 1) {
+      const previousYearLoan = await this.loanRepo.findOne({
+        where: {
+          studentId: studentId,
+          yearOfStudy: dto.yearOfStudy - 1,
+          status: Not(ApplicationStatus.REJECTED),
+        },
+      });
+
+      if (!previousYearLoan) {
+        throw new BadRequestException(
+          `You cannot apply for Year ${dto.yearOfStudy} because you have not yet applied for Year ${dto.yearOfStudy - 1}. You must apply sequentially.`
+        );
+      }
+    }
+
     const university = await this.universitiesService.findOneByName(profile.university);
 
     const UPKEEP_AMOUNT = 560000;
@@ -58,8 +74,20 @@ export class LoansService {
       finalAmount = fixedTuition + UPKEEP_AMOUNT;
     }
 
+    let formattedDate: Date | undefined = undefined;
+    if (dto.dateOfBirth) {
+      const [day, month, year] = dto.dateOfBirth.split('/');
+      formattedDate = new Date(`${year}-${month}-${day}`);
+    }
+
+    if (documentPaths.length !== 6) {
+      throw new BadRequestException('You must upload exactly 6 documents for every new loan application.');
+    }
+
     const loan = this.loanRepo.create({
       ...dto,
+      dateOfBirth: formattedDate,
+      documents: documentPaths,
       studentId,
       university: profile.university,
       programme: profile.programme ?? undefined,
@@ -73,6 +101,37 @@ export class LoansService {
     return {
       ...savedLoan,
       applicantName: user.name,
+    };
+  }
+
+  async getPreviousDetails(studentId: string) {
+    const lastLoan = await this.loanRepo.findOne({
+      where: { studentId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!lastLoan) {
+      throw new NotFoundException('You have not applied for a loan before. Please fill out the form from scratch.');
+    }
+
+    return {
+      nationalId: lastLoan.nationalId,
+      gender: lastLoan.gender,
+      maritalStatus: lastLoan.maritalStatus,
+      dateOfBirth: lastLoan.dateOfBirth,
+      phoneNumber: lastLoan.phoneNumber,
+      postalAddress: lastLoan.postalAddress,
+      guarantorName: lastLoan.guarantorName,
+      guarantorPhone: lastLoan.guarantorPhone,
+      guarantorAddress: lastLoan.guarantorAddress,
+      nextOfKinName: lastLoan.nextOfKinName,
+      nextOfKinPhone: lastLoan.nextOfKinPhone,
+      bankName: lastLoan.bankName,
+      bankAccountName: lastLoan.bankAccountName,
+      bankAccountNumber: lastLoan.bankAccountNumber,
+      bankBranch: lastLoan.bankBranch,
+      personalStatement: lastLoan.personalStatement,
+      previousDocuments: lastLoan.documents,
     };
   }
 
@@ -162,6 +221,23 @@ export class LoansService {
           `You already have an active loan application for Year ${safeDto.yearOfStudy}. You cannot change this application to a year you have already applied for.`
         );
       }
+
+      if (safeDto.yearOfStudy > 1) {
+        const previousYearLoan = await this.loanRepo.findOne({
+          where: {
+            studentId: studentId,
+            yearOfStudy: safeDto.yearOfStudy - 1,
+            status: Not(ApplicationStatus.REJECTED),
+            id: Not(existingLoan.id),
+          },
+        });
+
+        if (!previousYearLoan) {
+          throw new BadRequestException(
+            `You cannot change this application to Year ${safeDto.yearOfStudy} because you have not yet applied for Year ${safeDto.yearOfStudy - 1}.`
+          );
+        }
+      }
     }
 
     if (safeDto.nationalId !== undefined) existingLoan.nationalId = safeDto.nationalId;
@@ -169,7 +245,9 @@ export class LoansService {
     if (safeDto.maritalStatus !== undefined) existingLoan.maritalStatus = safeDto.maritalStatus;
     
     if (safeDto.dateOfBirth !== undefined) {
-      const parsedDate = new Date(safeDto.dateOfBirth);
+      const [day, month, year] = safeDto.dateOfBirth.split('/');
+      const parsedDate = new Date(`${year}-${month}-${day}`);
+      
       if (!isNaN(parsedDate.getTime())) {
         existingLoan.dateOfBirth = parsedDate;
       }
@@ -188,7 +266,6 @@ export class LoansService {
     if (safeDto.bankBranch !== undefined) existingLoan.bankBranch = safeDto.bankBranch;
     if (safeDto.yearOfStudy !== undefined) existingLoan.yearOfStudy = safeDto.yearOfStudy;
     if (safeDto.personalStatement !== undefined) existingLoan.personalStatement = safeDto.personalStatement;
-    if (safeDto.documents !== undefined) existingLoan.documents = safeDto.documents;
 
     if (safeDto.fundingType !== undefined && safeDto.fundingType !== existingLoan.fundingType) {
       const university = await this.universitiesService.findOneByName(existingLoan.university || '');
