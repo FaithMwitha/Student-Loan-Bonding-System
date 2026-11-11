@@ -3,17 +3,17 @@ import {
   IsEnum, 
   IsString, 
   IsOptional, 
-  IsNumber, 
-  IsArray, 
   IsInt, 
   Min, 
-  Max 
+  Max,
+  Matches,
+  ValidateIf,
+  Allow
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FundingType } from '../enums/funding-type.enum';
 
 export class CreateLoanApplicationDto {
-  // --- Personal & Contact ---
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
@@ -29,14 +29,30 @@ export class CreateLoanApplicationDto {
   @IsString()
   maritalStatus?: string;
 
-  @ApiProperty({ required: false, example: 'string' })
+  @ApiProperty({ 
+    required: false, 
+    example: '15/05/2002',
+    description: 'Date of birth in DD/MM/YYYY format'
+  })
   @IsOptional()
   @IsString()
+  @Matches(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, { 
+    message: 'Date must be in DD/MM/YYYY format' 
+  })
+  @ValidateIf((o) => {
+    if (!o.dateOfBirth) return false;
+    const [day, month, year] = o.dateOfBirth.split('/');
+    const date = new Date(`${year}-${month}-${day}`);
+    return isNaN(date.getTime());
+  }, { message: 'Date of birth must be a real calendar date' })
   dateOfBirth?: string;
 
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
+  @Matches(/^(099|098|088|089)\d{7}$/, { 
+    message: 'Phone number must be a valid Malawian number (Airtel or TNM) and exactly 10 digits long' 
+  })
   phoneNumber?: string;
 
   @ApiProperty({ required: false, example: 'string' })
@@ -44,7 +60,6 @@ export class CreateLoanApplicationDto {
   @IsString()
   postalAddress?: string;
 
-  // --- Guarantor & Next of Kin ---
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
@@ -53,6 +68,9 @@ export class CreateLoanApplicationDto {
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
+  @Matches(/^(099|098|088|089)\d{7}$/, { 
+    message: 'Guarantor phone number must be a valid Malawian number (Airtel or TNM) and exactly 10 digits long' 
+  })
   guarantorPhone?: string;
 
   @ApiProperty({ required: false, example: 'string' })
@@ -68,9 +86,11 @@ export class CreateLoanApplicationDto {
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
+  @Matches(/^(099|098|088|089)\d{7}$/, { 
+    message: 'Next of kin phone number must be a valid Malawian number (Airtel or TNM) and exactly 10 digits long' 
+  })
   nextOfKinPhone?: string;
 
-  // --- Bank Details ---
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional()
   @IsString()
@@ -91,7 +111,6 @@ export class CreateLoanApplicationDto {
   @IsString()
   bankBranch?: string;
 
-  // --- Academic & Statement ---
   @ApiProperty({ 
     example: 1, 
     minimum: 1, 
@@ -109,18 +128,15 @@ export class CreateLoanApplicationDto {
   @IsString()
   personalStatement?: string;
 
-  // --- Documents ---
   @ApiProperty({ 
-    required: false, 
-    type: [String], 
-    example: ['string'] 
+    type: 'array', 
+    items: { type: 'string', format: 'binary' },
+    description: 'Upload exactly 6 documents in this order:\n1. Applicant National ID\n2. Guarantor National ID\n3. Student ID\n4. Map to Home of Origin\n5. Guarantor Consent Form\n6. Bank Deposit Slip',
+    required: true
   })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  documents?: string[];
+  @Allow()
+  documents?: any;
 
-  // --- FINAL STEP: FUNDING TYPE ---
   @ApiProperty({
     required: false,
     enum: FundingType,
