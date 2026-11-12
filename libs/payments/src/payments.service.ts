@@ -6,6 +6,7 @@ import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
 import { randomUUID } from 'crypto';
 import { NotificationsService } from '../../notifications/src/notifications.service';
+import { ReceiptService } from './receipt/receipt.service';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { ApplicationStatus } from '../../loans/src/enums/application-status.enum';
 
@@ -17,6 +18,7 @@ export class PaymentsService {
     
     @InjectRepository(LoanApplication)
     private readonly loanRepo: Repository<LoanApplication>,
+    private readonly receiptService: ReceiptService,
 
     private readonly notificationsService: NotificationsService, 
   ) {}
@@ -137,5 +139,21 @@ export class PaymentsService {
       message: 'New payment recorded via webhook',
       payment: savedNewPayment,
     };
+  }
+
+  async getReceiptBuffer(id: string, userId: string, isAdmin: boolean): Promise<Buffer> {
+    const payment = await this.findOne(id);
+
+    if (!isAdmin && payment.userId !== userId) {
+      throw new NotFoundException(`Payment with ID ${id} not found`);
+    }
+
+    if (payment.status !== 'COMPLETED') {
+      throw new NotFoundException(
+        `Receipt available only for completed payments (current status: ${payment.status})`,
+      );
+    }
+
+    return this.receiptService.generateReceipt(payment);
   }
 }

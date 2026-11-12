@@ -5,6 +5,7 @@ import { NotificationsModule } from '../../notifications/src/notifications.modul
 import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
 import { Payment } from './entities/payment.entity';
+import { ReceiptService } from './receipt/receipt.service';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity'; // <-- ADD
 
 @Module({
@@ -14,7 +15,7 @@ import { LoanApplication } from '../../loans/src/entities/loan-application.entit
     NotificationsModule,
   ],
   controllers: [PaymentsController],
-  providers: [PaymentsService],
+  providers: [PaymentsService, ReceiptService],
   exports: [PaymentsService],
 })
 export class PaymentsModule {}

@@ -24,6 +24,8 @@ import { Role } from '@app/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
+import { Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { Audit, AuditAction, AuditEntity } from '@app/audit';
 
 @ApiTags('Payments')
@@ -112,5 +114,33 @@ export class PaymentsController {
   })
   handleWebhook(@Body() payload: PaymentWebhookDto) {
     return this.paymentsService.handleWebhook(payload);
+  }
+
+  @Get(':id/receipt')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Download payment receipt PDF' })
+  @ApiParam({ name: 'id', description: 'Payment UUID' })
+  @ApiResponse({ status: 200, description: 'Receipt PDF' })
+  @ApiResponse({ status: 404, description: 'Payment not found or not completed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async downloadReceipt(
+    @Param('id') id: string,
+    @Req() req: { user: { sub: string; role: string } },
+    @Res() res: Response,
+  ) {
+    const isAdmin = req.user.role === 'ADMIN';
+    const pdf = await this.paymentsService.getReceiptBuffer(
+      id,
+      req.user.sub,
+      isAdmin,
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="receipt-${id}.pdf"`,
+      'Content-Length': pdf.length.toString(),
+    });
+
+    res.end(pdf);
   }
 }
