@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
+import { randomUUID } from 'crypto';
 import { NotificationsService } from '../../notifications/src/notifications.service';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { ApplicationStatus } from '../../loans/src/enums/application-status.enum';
@@ -15,16 +16,19 @@ export class PaymentsService {
     private readonly paymentRepository: Repository<Payment>,
     
     @InjectRepository(LoanApplication)
-    private readonly loanRepo: Repository<LoanApplication>, // <-- ADDED
+    private readonly loanRepo: Repository<LoanApplication>,
 
     private readonly notificationsService: NotificationsService, 
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto, userId: string) {
+    const transactionReference = `PAY-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+
     const newPayment = this.paymentRepository.create({
       ...createPaymentDto,
       userId,
       status: 'PENDING',
+      transactionReference,
     });
     const savedPayment = await this.paymentRepository.save(newPayment);
 
@@ -68,7 +72,7 @@ export class PaymentsService {
     payment.status = status;
     const updatedPayment = await this.paymentRepository.save(payment);
 
-    if (status === 'SUCCESSFUL') {
+    if (status === 'COMPLETED') {
       if (updatedPayment.userId) {
         await this.notificationsService.createNotification(
           updatedPayment.userId,
@@ -76,7 +80,6 @@ export class PaymentsService {
         );
       }
 
-      // Automatically update the Loan Application status
       if (updatedPayment.applicationId) {
         await this.loanRepo.update(
           { id: updatedPayment.applicationId },
@@ -99,7 +102,7 @@ export class PaymentsService {
       payment.status = status;
       const savedPayment = await this.paymentRepository.save(payment);
 
-      if (status === 'SUCCESSFUL') {
+      if (status === 'COMPLETED') {
         if (savedPayment.userId) {
           await this.notificationsService.createNotification(
             savedPayment.userId,
@@ -107,7 +110,6 @@ export class PaymentsService {
           );
         }
 
-        // Automatically update the Loan Application status
         if (savedPayment.applicationId) {
           await this.loanRepo.update(
             { id: savedPayment.applicationId },
