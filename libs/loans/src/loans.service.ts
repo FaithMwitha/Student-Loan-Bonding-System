@@ -43,21 +43,21 @@ export class LoansService {
       );
     }
 
-    if (dto.yearOfStudy > 1) {
-      const previousYearLoan = await this.loanRepo.findOne({
-        where: {
-          studentId: studentId,
-          yearOfStudy: dto.yearOfStudy - 1,
-          status: Not(ApplicationStatus.REJECTED),
-        },
-      });
-
-      if (!previousYearLoan) {
-        throw new BadRequestException(
-          `You cannot apply for Year ${dto.yearOfStudy} because you have not yet applied for Year ${dto.yearOfStudy - 1}. You must apply sequentially.`
-        );
-      }
-    }
+//     if (dto.yearOfStudy > 1) {
+//       const previousYearLoan = await this.loanRepo.findOne({
+//         where: {
+//           studentId: studentId,
+//           yearOfStudy: dto.yearOfStudy - 1,
+//           status: Not(ApplicationStatus.REJECTED),
+//         },
+//       });
+// 
+//       if (!previousYearLoan) {
+//         throw new BadRequestException(
+//           `You cannot apply for Year ${dto.yearOfStudy} because you have not yet applied for Year ${dto.yearOfStudy - 1}. You must apply sequentially.`
+//         );
+//       }
+//     }
 
     const university = await this.universitiesService.findOneByName(profile.university);
 
@@ -222,22 +222,22 @@ export class LoansService {
         );
       }
 
-      if (safeDto.yearOfStudy > 1) {
-        const previousYearLoan = await this.loanRepo.findOne({
-          where: {
-            studentId: studentId,
-            yearOfStudy: safeDto.yearOfStudy - 1,
-            status: Not(ApplicationStatus.REJECTED),
-            id: Not(existingLoan.id),
-          },
-        });
-
-        if (!previousYearLoan) {
-          throw new BadRequestException(
-            `You cannot change this application to Year ${safeDto.yearOfStudy} because you have not yet applied for Year ${safeDto.yearOfStudy - 1}.`
-          );
-        }
-      }
+//       if (safeDto.yearOfStudy > 1) {
+//         const previousYearLoan = await this.loanRepo.findOne({
+//           where: {
+//             studentId: studentId,
+//             yearOfStudy: safeDto.yearOfStudy - 1,
+//             status: Not(ApplicationStatus.REJECTED),
+//             id: Not(existingLoan.id),
+//           },
+//         });
+// 
+//         if (!previousYearLoan) {
+//           throw new BadRequestException(
+//             `You cannot change this application to Year ${safeDto.yearOfStudy} because you have not yet applied for Year ${safeDto.yearOfStudy - 1}.`
+//           );
+//         }
+//       }
     }
 
     if (safeDto.nationalId !== undefined) existingLoan.nationalId = safeDto.nationalId;
