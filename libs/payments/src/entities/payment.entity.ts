@@ -20,6 +20,9 @@ export class Payment {
   @Column({ unique: true, nullable: true })
   transactionReference: string;
 
+  @Column({ unique: true, nullable: true })
+  idempotencyKey: string;
+
   @Column({ default: 'PENDING' })
   status: string;
 

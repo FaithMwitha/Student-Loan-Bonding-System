@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -23,7 +23,33 @@ export class PaymentsService {
     private readonly webhookSignature: WebhookSignatureService, 
   ) {}
 
-  async create(createPaymentDto: CreatePaymentDto, userId: string) {
+  async create(
+    createPaymentDto: CreatePaymentDto,
+    userId: string,
+    idempotencyKey?: string,
+  ) {
+    // Idempotency check — if provided, look for existing
+    if (idempotencyKey) {
+      const existing = await this.paymentRepository.findOne({
+        where: { idempotencyKey },
+      });
+
+      if (existing) {
+        const payloadMatches =
+          existing.applicationId === createPaymentDto.applicationId &&
+          Number(existing.amount) === createPaymentDto.amount &&
+          existing.paymentMethod === createPaymentDto.paymentMethod;
+
+        if (!payloadMatches) {
+          throw new ConflictException(
+            'Idempotency key already used with a different payload.',
+          );
+        }
+
+        return existing;
+      }
+    }
+
     const transactionReference = `PAY-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     const newPayment = this.paymentRepository.create({
@@ -31,6 +57,7 @@ export class PaymentsService {
       userId,
       status: 'PENDING',
       transactionReference,
+      idempotencyKey,
     });
     const savedPayment = await this.paymentRepository.save(newPayment);
 
