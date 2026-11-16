@@ -49,11 +49,11 @@ export class LoansController {
   @Post()
   @ApiOperation({ 
     summary: 'Submit a new loan application',
-    description: 'Allows a logged-in student to apply for a loan. Can reuse old documents or upload new ones.'
+    description: 'Allows a logged-in student to apply for a loan. Requires exactly 5 documents.'
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ 
-    description: 'Loan application data',
+    description: 'Loan application data with exactly 5 documents',
     type: CreateLoanApplicationDto 
   })
   @ApiResponse({ status: 201, description: 'Success! The loan application was created.' })
@@ -62,7 +62,7 @@ export class LoansController {
     entity: AuditEntity.LoanApplication,
     entityIdFrom: 'response.id',
   })
-  @UseInterceptors(FilesInterceptor('documents', 6, {
+  @UseInterceptors(FilesInterceptor('documents', 5, {
     storage: diskStorage({
       destination: './uploads/documents',
       filename: (req, file, callback) => {
@@ -77,15 +77,11 @@ export class LoansController {
     @Body() dto: CreateLoanApplicationDto,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    if (files && files.length > 0) {
-      const fileNames = files.map(f => f.originalname);
-      const uniqueFileNames = new Set(fileNames);
-      if (fileNames.length !== uniqueFileNames.size) {
-        throw new BadRequestException('You have uploaded the same document multiple times.');
-      }
+    if (!files || files.length !== 5) {
+      throw new BadRequestException('You must upload exactly 5 documents for every new loan application.');
     }
 
-    const documentPaths = files ? files.map((file) => file.path) : [];
+    const documentPaths = files.map((file) => file.path);
     return this.loansService.create(req.user.sub, dto, documentPaths);
   }
 

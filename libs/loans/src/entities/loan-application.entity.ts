@@ -19,7 +19,6 @@ export class LoanApplication {
   @Column({ name: 'student_id' })
   studentId: string;
 
-
   @ApiProperty({ required: false })
   @Column({ nullable: true })
   university?: string;
