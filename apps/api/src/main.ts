@@ -9,7 +9,10 @@ import { ApiModule } from './api.module';
 dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(ApiModule);
+  // Changed to NestExpressApplication
+  const app = await NestFactory.create<NestExpressApplication>(ApiModule, {
+    rawBody: true,
+  });
 
   app.setGlobalPrefix('api');
 

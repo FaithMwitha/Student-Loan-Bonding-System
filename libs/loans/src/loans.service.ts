@@ -38,7 +38,25 @@ export class LoansService {
       throw new BadRequestException(`You already have an active loan application for Year ${dto.yearOfStudy}.`);
     }
 
+<<<<<<< HEAD
     // (The sequential year restriction has been removed)
+=======
+//     if (dto.yearOfStudy > 1) {
+//       const previousYearLoan = await this.loanRepo.findOne({
+//         where: {
+//           studentId: studentId,
+//           yearOfStudy: dto.yearOfStudy - 1,
+//           status: Not(ApplicationStatus.REJECTED),
+//         },
+//       });
+// 
+//       if (!previousYearLoan) {
+//         throw new BadRequestException(
+//           `You cannot apply for Year ${dto.yearOfStudy} because you have not yet applied for Year ${dto.yearOfStudy - 1}. You must apply sequentially.`
+//         );
+//       }
+//     }
+>>>>>>> 85320615ed14cef886797d10a121d4c0e19a7f2b
 
     const university = await this.universitiesService.findOneByName(profile.university);
     const UPKEEP_AMOUNT = 560000;
@@ -197,7 +215,26 @@ export class LoansService {
         );
       }
 
+<<<<<<< HEAD
       // (The sequential year restriction has been removed)
+=======
+//       if (safeDto.yearOfStudy > 1) {
+//         const previousYearLoan = await this.loanRepo.findOne({
+//           where: {
+//             studentId: studentId,
+//             yearOfStudy: safeDto.yearOfStudy - 1,
+//             status: Not(ApplicationStatus.REJECTED),
+//             id: Not(existingLoan.id),
+//           },
+//         });
+// 
+//         if (!previousYearLoan) {
+//           throw new BadRequestException(
+//             `You cannot change this application to Year ${safeDto.yearOfStudy} because you have not yet applied for Year ${safeDto.yearOfStudy - 1}.`
+//           );
+//         }
+//       }
+>>>>>>> 85320615ed14cef886797d10a121d4c0e19a7f2b
     }
 
     if (safeDto.yearOfStudy !== undefined) existingLoan.yearOfStudy = safeDto.yearOfStudy;

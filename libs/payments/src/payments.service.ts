@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -6,6 +6,7 @@ import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
 import { randomUUID } from 'crypto';
 import { NotificationsService } from '../../notifications/src/notifications.service';
+import { WebhookSignatureService } from './webhook-signature.service';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { ApplicationStatus } from '../../loans/src/enums/application-status.enum';
 
@@ -18,10 +19,37 @@ export class PaymentsService {
     @InjectRepository(LoanApplication)
     private readonly loanRepo: Repository<LoanApplication>,
 
-    private readonly notificationsService: NotificationsService, 
+    private readonly notificationsService: NotificationsService,
+    private readonly webhookSignature: WebhookSignatureService, 
   ) {}
 
-  async create(createPaymentDto: CreatePaymentDto, userId: string) {
+  async create(
+    createPaymentDto: CreatePaymentDto,
+    userId: string,
+    idempotencyKey?: string,
+  ) {
+    // Idempotency check — if provided, look for existing
+    if (idempotencyKey) {
+      const existing = await this.paymentRepository.findOne({
+        where: { idempotencyKey },
+      });
+
+      if (existing) {
+        const payloadMatches =
+          existing.applicationId === createPaymentDto.applicationId &&
+          Number(existing.amount) === createPaymentDto.amount &&
+          existing.paymentMethod === createPaymentDto.paymentMethod;
+
+        if (!payloadMatches) {
+          throw new ConflictException(
+            'Idempotency key already used with a different payload.',
+          );
+        }
+
+        return existing;
+      }
+    }
+
     const transactionReference = `PAY-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     const newPayment = this.paymentRepository.create({
@@ -29,6 +57,7 @@ export class PaymentsService {
       userId,
       status: 'PENDING',
       transactionReference,
+      idempotencyKey,
     });
     const savedPayment = await this.paymentRepository.save(newPayment);
 
@@ -91,7 +120,13 @@ export class PaymentsService {
     return updatedPayment;
   }
 
-  async handleWebhook(payload: PaymentWebhookDto) {
+  async handleWebhook(
+    payload: PaymentWebhookDto,
+    signature?: string,
+    rawBody?: Buffer,
+  ) {
+    this.webhookSignature.verify(rawBody ?? Buffer.from(''), signature);
+
     const { transactionReference, status, amount } = payload;
 
     const payment = await this.paymentRepository.findOne({
