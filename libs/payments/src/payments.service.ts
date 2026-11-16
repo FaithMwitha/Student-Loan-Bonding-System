@@ -6,6 +6,7 @@ import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
 import { randomUUID } from 'crypto';
 import { NotificationsService } from '../../notifications/src/notifications.service';
+import { WebhookSignatureService } from './webhook-signature.service';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { ApplicationStatus } from '../../loans/src/enums/application-status.enum';
 
@@ -18,7 +19,8 @@ export class PaymentsService {
     @InjectRepository(LoanApplication)
     private readonly loanRepo: Repository<LoanApplication>,
 
-    private readonly notificationsService: NotificationsService, 
+    private readonly notificationsService: NotificationsService,
+    private readonly webhookSignature: WebhookSignatureService, 
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto, userId: string) {
@@ -91,7 +93,13 @@ export class PaymentsService {
     return updatedPayment;
   }
 
-  async handleWebhook(payload: PaymentWebhookDto) {
+  async handleWebhook(
+    payload: PaymentWebhookDto,
+    signature?: string,
+    rawBody?: Buffer,
+  ) {
+    this.webhookSignature.verify(rawBody ?? Buffer.from(''), signature);
+
     const { transactionReference, status, amount } = payload;
 
     const payment = await this.paymentRepository.findOne({

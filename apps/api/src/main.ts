@@ -7,7 +7,9 @@ import { ApiModule } from './api.module';
 
 async function bootstrap() {
   // Changed to NestExpressApplication
-  const app = await NestFactory.create<NestExpressApplication>(ApiModule);
+  const app = await NestFactory.create<NestExpressApplication>(ApiModule, {
+    rawBody: true,
+  });
 
   app.setGlobalPrefix('api');
 
