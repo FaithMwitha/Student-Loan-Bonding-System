@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard, Roles } from '@app/auth';
 import { Role } from '@app/common';
 import { UniversitiesService } from './universities.service';
 import { CreateUniversityDto } from './dto/create-university.dto';
+import { UpdateUniversityDto } from './dto/update-university.dto';
 
 @ApiTags('Universities')
 @Controller('universities')
@@ -18,13 +19,19 @@ export class UniversitiesController {
     return this.universitiesService.create(dto);
   }
 
-  // Public - Anyone (even without a token) can view the list
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUniversityDto) {
+    return this.universitiesService.update(id, dto);
+  }
+
   @Get()
   findAll() {
     return this.universitiesService.findAll();
   }
 
-  // Public - Anyone can check a specific university's fee
   @Get(':name')
   findOneByName(@Param('name') name: string) {
     return this.universitiesService.findOneByName(name);
