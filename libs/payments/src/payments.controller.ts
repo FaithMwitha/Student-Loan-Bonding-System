@@ -48,9 +48,10 @@ export class PaymentsController {
   })
   create(
     @Body() dto: CreatePaymentDto,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
     @Req() req: { user: { sub: string } },
   ) {
-    return this.paymentsService.create(dto, req.user.sub);
+    return this.paymentsService.create(dto, req.user.sub, idempotencyKey);
   }
 
   @Get('my-payments')
