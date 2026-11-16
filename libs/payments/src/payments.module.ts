@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '@app/auth';
 import { NotificationsModule } from '../../notifications/src/notifications.module';
 import { PaymentsService } from './payments.service';
+import { WebhookSignatureService } from './webhook-signature.service';
 import { PaymentsController } from './payments.controller';
 import { Payment } from './entities/payment.entity';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity'; // <-- ADD
@@ -14,7 +15,7 @@ import { LoanApplication } from '../../loans/src/entities/loan-application.entit
     NotificationsModule,
   ],
   controllers: [PaymentsController],
-  providers: [PaymentsService],
+  providers: [PaymentsService, WebhookSignatureService],
   exports: [PaymentsService],
 })
 export class PaymentsModule {}

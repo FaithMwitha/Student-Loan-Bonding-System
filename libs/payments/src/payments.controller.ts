@@ -9,6 +9,7 @@ import {
   Patch,
   UseGuards,
   Req,
+  Headers,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +20,7 @@ import {
   ApiBody,
   ApiSecurity,
 } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { JwtAuthGuard, RolesGuard, Roles } from '@app/auth';
 import { Role } from '@app/common';
 import { PaymentsService } from './payments.service';
@@ -110,7 +112,11 @@ export class PaymentsController {
     entity: AuditEntity.Payment,
     entityIdFrom: 'body.transactionReference',
   })
-  handleWebhook(@Body() payload: PaymentWebhookDto) {
-    return this.paymentsService.handleWebhook(payload);
+  handleWebhook(
+    @Body() payload: PaymentWebhookDto,
+    @Headers('x-webhook-signature') signature: string | undefined,
+    @Req() req: Request & { rawBody: Buffer },
+  ) {
+    return this.paymentsService.handleWebhook(payload, signature, req.rawBody);
   }
 }
