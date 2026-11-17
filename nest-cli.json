@@ -17,6 +17,15 @@
         "tsConfigPath": "libs/account-management/tsconfig.lib.json"
       }
     },
+    "admissions": {
+      "type": "library",
+      "root": "libs/admissions",
+      "entryFile": "index",
+      "sourceRoot": "libs/admissions/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/admissions/tsconfig.lib.json"
+      }
+    },
     "api": {
       "type": "application",
       "root": "apps/api",
