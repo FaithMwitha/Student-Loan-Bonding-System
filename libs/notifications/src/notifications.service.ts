@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Notification } from './entities/notification.entity';
+import { UsersService } from '../../users/src/users.service'; // Make sure this path is correct
 
 @Injectable()
 export class NotificationsService {
@@ -14,8 +15,8 @@ export class NotificationsService {
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
     private readonly configService: ConfigService,
+    private readonly usersService: UsersService, // <-- Inject UsersService
   ) {
-
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('MAIL_HOST'),
       port: this.configService.get<number>('MAIL_PORT'),
@@ -50,8 +51,20 @@ export class NotificationsService {
   }
 
   async createNotification(userId: string, message: string) {
+
     const notification = this.notificationRepo.create({ userId, message });
-    return this.notificationRepo.save(notification);
+    const savedNotification = await this.notificationRepo.save(notification);
+
+    try {
+      const user = await this.usersService.findById(userId);
+      if (user && user.email) {
+        await this.send(user.email, 'Student Loan Update', message);
+      }
+    } catch (error) {
+      this.logger.error(`Could not fetch user for email notification: ${userId}`);
+    }
+
+    return savedNotification;
   }
 
   async getUserNotifications(userId: string, isRead?: boolean) {
