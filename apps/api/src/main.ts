@@ -3,11 +3,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as dns from 'dns';
 import { ApiModule } from './api.module';
+
+dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
   // Changed to NestExpressApplication
-  const app = await NestFactory.create<NestExpressApplication>(ApiModule);
+  const app = await NestFactory.create<NestExpressApplication>(ApiModule, {
+    rawBody: true,
+  });
 
   app.setGlobalPrefix('api');
 
@@ -19,7 +24,6 @@ async function bootstrap() {
     }),
   );
 
-  // Serve the uploaded documents
   app.useStaticAssets(join(__dirname, '..', '..', '..', 'uploads'), {
     prefix: '/uploads/',
   });

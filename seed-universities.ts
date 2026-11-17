@@ -6,8 +6,8 @@ const AppDataSource = new DataSource({
   host: 'localhost',
   port: 5432,
   username: 'postgres',
-  password: '123GodAll', 
-  database: 'Students-Loans-Bonding-System',  
+  password: 'password', 
+  database: 'loans_bonding',  
   entities: [University],
   synchronize: false,
 });
