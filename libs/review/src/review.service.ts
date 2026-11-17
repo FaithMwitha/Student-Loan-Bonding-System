@@ -1,7 +1,6 @@
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { NotificationsService } from '@app/notifications';
 
@@ -15,7 +14,7 @@ export class ReviewService {
 
   async processReview(
     loanId: string,
-    status: 'APPROVED' | 'REJECTED',
+    status: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED',
     rejectionReason?: string,
   ) {
     const loan = await this.loanRepo.findOne({
@@ -40,7 +39,7 @@ export class ReviewService {
       rejectionReason,
     );
 
-    return { message: `Loan successfully ${status}` };
+    return { message: `Loan successfully marked as ${status}` };
   }
 
   async getAllLoans() {
@@ -54,7 +53,9 @@ export class ReviewService {
   }
 
   async getPendingLoans() {
-    return this.getLoansByStatus('SUBMITTED');
+    return this.loanRepo.find({
+      where: { status: In(['PENDING_PAYMENT', 'SUBMITTED']) as any },
+    });
   }
 
   async getLoansUnderReview() {
