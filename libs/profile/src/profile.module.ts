@@ -8,10 +8,19 @@ import { AuthModule } from '@app/auth';
 import { UsersModule } from '@app/users';
 import { StaffProfileService } from './staff-profile.service';
 import { StudentProfileService } from './student-profile.service';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([StudentProfile, StaffProfile]), UsersModule, AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([StudentProfile, StaffProfile]), 
+    UsersModule, 
+    AuthModule
+  ],
   controllers: [StudentsController],
-  providers: [StudentRegistrationService, StudentProfileService, StaffProfileService],
-  exports: [StaffProfileService],
+  providers: [
+    StudentRegistrationService, 
+    StudentProfileService, 
+    StaffProfileService
+  ],
+  exports: [StaffProfileService, StudentProfileService],
 })
 export class ProfileModule {}
