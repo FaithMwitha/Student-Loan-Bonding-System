@@ -1,5 +1,16 @@
 import {
-  Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Req, UseGuards,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
@@ -9,6 +20,7 @@ import { Audit, AuditAction, AuditEntity } from '@app/audit';
 import { AccountManagementService } from './account-management.service';
 import { CreateOfficerDto } from './dto/create-officer.dto';
 import { UpdateAccountStatusDto } from './dto/update-account-status.dto';
+import { UserFilterDto } from './dto/user-filter.dto';
 
 interface AuthRequest extends Request {
   user: { sub: string; role: Role };
@@ -38,6 +50,18 @@ export class AccountManagementController {
   @Get('users/:id')
   getUser(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.getUser(id);
+  }
+
+  @ApiOperation({ summary: 'List users' })
+  @Get('users')
+  list(@Query() filter: UserFilterDto) {
+    return this.service.list(filter);
+  }
+
+  @ApiOperation({ summary: 'Get user statistics' })
+  @Get('users/stats')
+  stats() {
+    return this.service.stats();
   }
 
   @ApiOperation({ summary: 'Update user account status' })
