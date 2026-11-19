@@ -1,56 +1,55 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches, ValidateIf } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
 
 export class UpdateStudentProfileDto {
-  @ApiPropertyOptional({ example: 'string' })
+  @ApiPropertyOptional({ example: 'John Doe' })
   @IsOptional()
   @IsString()
-  @Matches(/^(099|098|088|089)\d{7}$/, { 
-    message: 'Phone number must be a valid Malawian number (Airtel or TNM) and exactly 10 digits long' 
-  })
-  phone?: string;
+  name?: string;
 
-  @ApiPropertyOptional({ example: 'string' })
+  @ApiPropertyOptional({ example: 'M20230013/0220' })
   @IsOptional()
   @IsString()
-  bankName?: string;
+  manebId?: string;
 
-  @ApiPropertyOptional({ example: 'string' })
+  @ApiPropertyOptional({ example: 'University of Malawi' })
   @IsOptional()
   @IsString()
-  bankAccountNumber?: string;
+  university?: string;
+
+  @ApiPropertyOptional({ example: 'Computer Science' })
+  @IsOptional()
+  @IsString()
+  programme?: string;
 
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsString()
   nationalId?: string;
 
-  @ApiPropertyOptional({ example: 'string' })
+  @ApiPropertyOptional({ example: 'Male' })
   @IsOptional()
   @IsString()
   gender?: string;
 
-  @ApiPropertyOptional({ example: 'string' })
+  @ApiPropertyOptional({ example: 'Single' })
   @IsOptional()
   @IsString()
   maritalStatus?: string;
 
-  @ApiPropertyOptional({ 
-    example: '15/05/2002',
-    description: 'Date of birth in DD/MM/YYYY format'
-  })
+  @ApiPropertyOptional({ example: '15/05/2002' })
   @IsOptional()
   @IsString()
   @Matches(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, { 
     message: 'Date must be in DD/MM/YYYY format' 
   })
-  @ValidateIf((o) => {
-    if (!o.dateOfBirth) return false;
-    const [day, month, year] = o.dateOfBirth.split('/');
-    const date = new Date(`${year}-${month}-${day}`);
-    return isNaN(date.getTime());
-  }, { message: 'Date of birth must be a real calendar date' })
   dateOfBirth?: string;
+
+  @ApiPropertyOptional({ example: 'string' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^(099|098|088|089)\d{7}$/, { message: 'Invalid phone' })
+  phone?: string;
 
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
@@ -65,9 +64,7 @@ export class UpdateStudentProfileDto {
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsString()
-  @Matches(/^(099|098|088|089)\d{7}$/, { 
-    message: 'Guarantor phone number must be a valid Malawian number (Airtel or TNM) and exactly 10 digits long' 
-  })
+  @Matches(/^(099|098|088|089)\d{7}$/, { message: 'Invalid phone' })
   guarantorPhone?: string;
 
   @ApiPropertyOptional({ example: 'string' })
@@ -83,18 +80,26 @@ export class UpdateStudentProfileDto {
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsString()
-  @Matches(/^(099|098|088|089)\d{7}$/, { 
-    message: 'Next of kin phone number must be a valid Malawian number (Airtel or TNM) and exactly 10 digits long' 
-  })
+  @Matches(/^(099|098|088|089)\d{7}$/, { message: 'Invalid phone' })
   nextOfKinPhone?: string;
 
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsString()
-  bankBranch?: string;
+  bankName?: string;
 
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsString()
   bankAccountName?: string;
+
+  @ApiPropertyOptional({ example: 'string' })
+  @IsOptional()
+  @IsString()
+  bankAccountNumber?: string;
+
+  @ApiPropertyOptional({ example: 'string' })
+  @IsOptional()
+  @IsString()
+  bankBranch?: string;
 }
