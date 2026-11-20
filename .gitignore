@@ -9,3 +9,5 @@ coverage/
 .DS_Store
 docker-compose.yml
 uploads/
+student-loan-docker-images.tar
+student-loan-bonding-system.tar

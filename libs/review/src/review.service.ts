@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { NotificationsService } from '@app/notifications';
+import { VerificationsService } from '../../verification/src/verification.service';
 
 @Injectable()
 export class ReviewService {
@@ -10,6 +11,7 @@ export class ReviewService {
     @InjectRepository(LoanApplication)
     private readonly loanRepo: Repository<LoanApplication>,
     private readonly notificationsService: NotificationsService,
+    private readonly verificationsService: VerificationsService,
   ) {}
 
   async processReview(
@@ -32,6 +34,14 @@ export class ReviewService {
     }
 
     await this.loanRepo.save(loan);
+
+     // Automatically register approved students for verification
+  if (status === 'APPROVED') {
+    await this.verificationsService.createFromAcceptedApplication(
+      loan.id,
+      loan.studentId,
+    );
+  }
 
     await this.notificationsService.sendLoanStatusAlert(
       loan.studentId,
