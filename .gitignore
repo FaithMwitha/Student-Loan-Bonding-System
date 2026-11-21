@@ -8,3 +8,4 @@ coverage/
 .vscode/
 .DS_Store
 docker-compose.yml
+uploads/

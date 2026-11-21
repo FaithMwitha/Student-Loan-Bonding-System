@@ -23,48 +23,65 @@ export class LoansService {
     private readonly universitiesService: UniversitiesService,
   ) {}
 
-  async create(studentId: string, dto: CreateLoanApplicationDto) {
+  async create(studentId: string, dto: CreateLoanApplicationDto, documentPaths: string[] = []) {
     const profile = await this.profileRepo.findOne({ where: { userId: studentId } });
     if (!profile) {
       throw new ForbiddenException('You must complete student registration before applying for a loan.');
     }
 
+    // Check for duplicate year (A student cannot apply for the SAME year twice)
     const existingLoanForYear = await this.loanRepo.findOne({
-      where: {
-        studentId: studentId,
-        yearOfStudy: dto.yearOfStudy,
-        status: Not(ApplicationStatus.REJECTED),
-      },
+      where: { studentId: studentId, yearOfStudy: dto.yearOfStudy, status: Not(ApplicationStatus.REJECTED) },
     });
 
     if (existingLoanForYear) {
-      throw new BadRequestException(
-        `You already have an active or completed loan application for Year ${dto.yearOfStudy}. You cannot apply again for the same year.`
-      );
+      throw new BadRequestException(`You already have an active loan application for Year ${dto.yearOfStudy}.`);
     }
 
-    const university = await this.universitiesService.findOneByName(profile.university);
+    // (The sequential year restriction has been removed)
 
+    const university = await this.universitiesService.findOneByName(profile.university);
     const UPKEEP_AMOUNT = 560000;
     const fixedTuition = university.tuitionFee;
     
     let finalAmount = 0;
+    if (dto.fundingType === FundingType.TUITION) finalAmount = fixedTuition;
+    else if (dto.fundingType === FundingType.UPKEEP) finalAmount = UPKEEP_AMOUNT;
+    else if (dto.fundingType === FundingType.BOTH) finalAmount = fixedTuition + UPKEEP_AMOUNT;
 
-    if (dto.fundingType === FundingType.TUITION) {
-      finalAmount = fixedTuition;
-    } else if (dto.fundingType === FundingType.UPKEEP) {
-      finalAmount = UPKEEP_AMOUNT;
-    } else if (dto.fundingType === FundingType.BOTH) {
-      finalAmount = fixedTuition + UPKEEP_AMOUNT;
+    if (documentPaths.length !== 5) {
+      throw new BadRequestException('You must upload exactly 5 documents.');
     }
 
     const loan = this.loanRepo.create({
-      ...dto,
-      studentId,
-      university: profile.university,
-      programme: profile.programme ?? undefined,
+      // Loan specific (from DTO)
+      yearOfStudy: dto.yearOfStudy,
+      personalStatement: dto.personalStatement,
+      fundingType: dto.fundingType,
+      documents: documentPaths,
       amountRequested: finalAmount, 
       status: ApplicationStatus.PENDING_PAYMENT,
+      
+      postalAddress: dto.postalAddress ?? undefined,
+      guarantorName: dto.guarantorName ?? undefined,
+      guarantorPhone: dto.guarantorPhone ?? undefined,
+      guarantorAddress: dto.guarantorAddress ?? undefined,
+      nextOfKinName: dto.nextOfKinName ?? undefined,
+      nextOfKinPhone: dto.nextOfKinPhone ?? undefined,
+      bankName: dto.bankName ?? undefined,
+      bankAccountName: dto.bankAccountName ?? undefined,
+      bankAccountNumber: dto.bankAccountNumber ?? undefined,
+      bankBranch: dto.bankBranch ?? undefined,
+
+      // Auto-filled from Profile (Only personal details)
+      studentId,
+      nationalId: profile.nationalId ?? undefined,
+      gender: profile.gender ?? undefined,
+      maritalStatus: profile.maritalStatus ?? undefined,
+      dateOfBirth: profile.dateOfBirth ?? undefined,
+      phoneNumber: profile.phone ?? undefined,
+      university: profile.university,
+      programme: profile.programme ?? undefined,
     });
     
     const savedLoan = await this.loanRepo.save(loan);
@@ -76,24 +93,41 @@ export class LoansService {
     };
   }
 
+  async getPreviousDetails(studentId: string) {
+    const lastLoan = await this.loanRepo.findOne({
+      where: { studentId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!lastLoan) {
+      throw new NotFoundException('You have not applied for a loan before.');
+    }
+
+    return {
+      postalAddress: lastLoan.postalAddress,
+      guarantorName: lastLoan.guarantorName,
+      guarantorPhone: lastLoan.guarantorPhone,
+      guarantorAddress: lastLoan.guarantorAddress,
+      nextOfKinName: lastLoan.nextOfKinName,
+      nextOfKinPhone: lastLoan.nextOfKinPhone,
+      bankName: lastLoan.bankName,
+      bankAccountName: lastLoan.bankAccountName,
+      bankAccountNumber: lastLoan.bankAccountNumber,
+      bankBranch: lastLoan.bankBranch,
+      personalStatement: lastLoan.personalStatement,
+      previousDocuments: lastLoan.documents,
+    };
+  }
+
   async findMyApplications(studentId: string, filterDto: FilterLoansDto) {
     const { status, fundingType, university, search, page = 1, limit = 20 } = filterDto;
 
     const queryBuilder = this.loanRepo.createQueryBuilder('loan')
       .where('loan.studentId = :studentId', { studentId });
 
-    if (status) {
-      queryBuilder.andWhere('loan.status = :status', { status });
-    }
-
-    if (fundingType) {
-      queryBuilder.andWhere('loan.fundingType = :fundingType', { fundingType });
-    }
-
-    if (university) {
-      queryBuilder.andWhere('loan.university = :university', { university });
-    }
-
+    if (status) queryBuilder.andWhere('loan.status = :status', { status });
+    if (fundingType) queryBuilder.andWhere('loan.fundingType = :fundingType', { fundingType });
+    if (university) queryBuilder.andWhere('loan.university = :university', { university });
     if (search) {
       queryBuilder.andWhere(
         '(CAST(loan.id AS text) ILIKE :search OR loan.nationalId ILIKE :search)', 
@@ -159,23 +193,15 @@ export class LoansService {
 
       if (duplicateYear) {
         throw new BadRequestException(
-          `You already have an active loan application for Year ${safeDto.yearOfStudy}. You cannot change this application to a year you have already applied for.`
+          `You already have an active loan application for Year ${safeDto.yearOfStudy}.`
         );
       }
+
+      // (The sequential year restriction has been removed)
     }
 
-    if (safeDto.nationalId !== undefined) existingLoan.nationalId = safeDto.nationalId;
-    if (safeDto.gender !== undefined) existingLoan.gender = safeDto.gender;
-    if (safeDto.maritalStatus !== undefined) existingLoan.maritalStatus = safeDto.maritalStatus;
-    
-    if (safeDto.dateOfBirth !== undefined) {
-      const parsedDate = new Date(safeDto.dateOfBirth);
-      if (!isNaN(parsedDate.getTime())) {
-        existingLoan.dateOfBirth = parsedDate;
-      }
-    }
-    
-    if (safeDto.phoneNumber !== undefined) existingLoan.phoneNumber = safeDto.phoneNumber;
+    if (safeDto.yearOfStudy !== undefined) existingLoan.yearOfStudy = safeDto.yearOfStudy;
+    if (safeDto.personalStatement !== undefined) existingLoan.personalStatement = safeDto.personalStatement;
     if (safeDto.postalAddress !== undefined) existingLoan.postalAddress = safeDto.postalAddress;
     if (safeDto.guarantorName !== undefined) existingLoan.guarantorName = safeDto.guarantorName;
     if (safeDto.guarantorPhone !== undefined) existingLoan.guarantorPhone = safeDto.guarantorPhone;
@@ -186,9 +212,6 @@ export class LoansService {
     if (safeDto.bankAccountName !== undefined) existingLoan.bankAccountName = safeDto.bankAccountName;
     if (safeDto.bankAccountNumber !== undefined) existingLoan.bankAccountNumber = safeDto.bankAccountNumber;
     if (safeDto.bankBranch !== undefined) existingLoan.bankBranch = safeDto.bankBranch;
-    if (safeDto.yearOfStudy !== undefined) existingLoan.yearOfStudy = safeDto.yearOfStudy;
-    if (safeDto.personalStatement !== undefined) existingLoan.personalStatement = safeDto.personalStatement;
-    if (safeDto.documents !== undefined) existingLoan.documents = safeDto.documents;
 
     if (safeDto.fundingType !== undefined && safeDto.fundingType !== existingLoan.fundingType) {
       const university = await this.universitiesService.findOneByName(existingLoan.university || '');

@@ -1,11 +1,18 @@
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import * as dns from 'dns';
 import { ApiModule } from './api.module';
 
+dns.setDefaultResultOrder('ipv4first');
+
 async function bootstrap() {
-  const app = await NestFactory.create(ApiModule);
+  // Changed to NestExpressApplication
+  const app = await NestFactory.create<NestExpressApplication>(ApiModule, {
+    rawBody: true,
+  });
 
   app.setGlobalPrefix('api');
 
@@ -16,6 +23,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.useStaticAssets(join(__dirname, '..', '..', '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
@@ -29,7 +40,6 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    
     SwaggerModule.setup('docs', app, document, {
       swaggerOptions: {
         tagsSorter: 'alpha',
@@ -38,7 +48,6 @@ async function bootstrap() {
     });
   }
 
-  
   await app.listen(process.env.PORT ?? 3000);
 }
 

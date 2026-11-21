@@ -22,7 +22,15 @@ export class StudentRegistrationService {
           { name: dto.name, email: dto.email, password: dto.password },
           manager,
         );
+        
         const repo = manager.getRepository(StudentProfile);
+        
+        let formattedDate: Date | null = null;
+        if (dto.dateOfBirth) {
+          const [day, month, year] = dto.dateOfBirth.split('/');
+          formattedDate = new Date(`${year}-${month}-${day}`);
+        }
+
         const profile = await repo.save(
           repo.create({
             userId: user.id,
@@ -30,8 +38,15 @@ export class StudentRegistrationService {
             registrationNumber: dto.registrationNumber ?? null,
             university: dto.university,
             programme: dto.programme ?? null,
+            
+            nationalId: dto.nationalId ?? null,
+            gender: dto.gender ?? null,
+            maritalStatus: dto.maritalStatus ?? null,
+            dateOfBirth: formattedDate,
+            phone: dto.phone ?? null,
           }),
         );
+        
         return toStudentProfileResponse(profile);
       });
     } catch (err) {

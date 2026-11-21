@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { University } from './entities/university.entity';
 import { CreateUniversityDto } from './dto/create-university.dto';
+import { UpdateUniversityDto } from './dto/update-university.dto';
 
 @Injectable()
 export class UniversitiesService {
@@ -24,5 +25,18 @@ export class UniversitiesService {
     const uni = await this.uniRepo.findOne({ where: { name } });
     if (!uni) throw new NotFoundException('University not found');
     return uni;
+  }
+
+  async update(id: string, dto: UpdateUniversityDto) {
+    const university = await this.uniRepo.findOne({ where: { id } });
+    
+    if (!university) {
+      throw new NotFoundException('University not found');
+    }
+
+    if (dto.name) university.name = dto.name;
+    if (dto.tuitionFee) university.tuitionFee = dto.tuitionFee;
+
+    return this.uniRepo.save(university);
   }
 }

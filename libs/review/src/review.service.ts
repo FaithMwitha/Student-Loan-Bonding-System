@@ -1,7 +1,6 @@
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { NotificationsService } from '@app/notifications';
 
@@ -15,7 +14,7 @@ export class ReviewService {
 
   async processReview(
     loanId: string,
-    status: 'APPROVED' | 'REJECTED',
+    status: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED',
     rejectionReason?: string,
   ) {
     const loan = await this.loanRepo.findOne({
@@ -40,32 +39,33 @@ export class ReviewService {
       rejectionReason,
     );
 
-    return { message: `Loan successfully ${status}` };
+    return { message: `Loan successfully marked as ${status}` };
   }
 
-  // Get loans according to their status
+  async getAllLoans() {
+    return this.loanRepo.find();
+  }
+
   async getLoansByStatus(status: string) {
     return this.loanRepo.find({
       where: { status } as any,
     });
   }
 
-  // Get pending loans
   async getPendingLoans() {
-    return this.getLoansByStatus('SUBMITTED');
+    return this.loanRepo.find({
+      where: { status: In(['PENDING_PAYMENT', 'SUBMITTED']) as any },
+    });
   }
 
-  // Get loans under review
   async getLoansUnderReview() {
     return this.getLoansByStatus('UNDER_REVIEW');
   }
 
-  // Get rejected loans
   async getRejectedLoans() {
     return this.getLoansByStatus('REJECTED');
   }
 
-  // Get accepted loans
   async getAcceptedLoans() {
     return this.getLoansByStatus('APPROVED');
   }

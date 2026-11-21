@@ -1,28 +1,63 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Payment } from './entities/payment.entity';
-import { LoanApplication } from '@app/loans';
-import { ApplicationStatus } from '@app/loans';
+import { randomUUID } from 'crypto';
 import { NotificationsService } from '../../notifications/src/notifications.service';
+import { WebhookSignatureService } from './webhook-signature.service';
+import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
+import { ApplicationStatus } from '../../loans/src/enums/application-status.enum';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
-    private readonly notificationsService: NotificationsService,
+    
     @InjectRepository(LoanApplication)
-    private readonly loanRepository: Repository<LoanApplication>,
+    private readonly loanRepo: Repository<LoanApplication>,
+
+    private readonly notificationsService: NotificationsService,
+    private readonly webhookSignature: WebhookSignatureService, 
   ) {}
 
-  async create(createPaymentDto: CreatePaymentDto, userId: string) {
+  async create(
+    createPaymentDto: CreatePaymentDto,
+    userId: string,
+    idempotencyKey?: string,
+  ) {
+    // Idempotency check — if provided, look for existing
+    if (idempotencyKey) {
+      const existing = await this.paymentRepository.findOne({
+        where: { idempotencyKey },
+      });
+
+      if (existing) {
+        const payloadMatches =
+          existing.applicationId === createPaymentDto.applicationId &&
+          Number(existing.amount) === createPaymentDto.amount &&
+          existing.paymentMethod === createPaymentDto.paymentMethod;
+
+        if (!payloadMatches) {
+          throw new ConflictException(
+            'Idempotency key already used with a different payload.',
+          );
+        }
+
+        return existing;
+      }
+    }
+
+    const transactionReference = `PAY-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+
     const newPayment = this.paymentRepository.create({
       ...createPaymentDto,
       userId,
       status: 'PENDING',
+      transactionReference,
+      idempotencyKey,
     });
     const savedPayment = await this.paymentRepository.save(newPayment);
 
@@ -66,17 +101,32 @@ export class PaymentsService {
     payment.status = status;
     const updatedPayment = await this.paymentRepository.save(payment);
 
-    if (status === 'COMPLETED' && updatedPayment.userId) {
-      await this.notificationsService.createNotification(
-        updatedPayment.userId,
-        `Your payment of K${updatedPayment.amount} was successful!`
-      );
+    if (status === 'COMPLETED') {
+      if (updatedPayment.userId) {
+        await this.notificationsService.createNotification(
+          updatedPayment.userId,
+          `Your payment of K${updatedPayment.amount} was successful!`
+        );
+      }
+
+      if (updatedPayment.applicationId) {
+        await this.loanRepo.update(
+          { id: updatedPayment.applicationId },
+          { status: ApplicationStatus.SUBMITTED }
+        );
+      }
     }
 
     return updatedPayment;
   }
 
-  async handleWebhook(payload: PaymentWebhookDto) {
+  async handleWebhook(
+    payload: PaymentWebhookDto,
+    signature?: string,
+    rawBody?: Buffer,
+  ) {
+    this.webhookSignature.verify(rawBody ?? Buffer.from(''), signature);
+
     const { transactionReference, status, amount } = payload;
 
     const payment = await this.paymentRepository.findOne({
@@ -87,19 +137,20 @@ export class PaymentsService {
       payment.status = status;
       const savedPayment = await this.paymentRepository.save(payment);
 
-      // Auto-unlock loan for review after successful payment
-      if (status === 'COMPLETED' && savedPayment.applicationId) {
-        await this.loanRepository.update(
-          { id: savedPayment.applicationId },
-          { status: ApplicationStatus.SUBMITTED },
-        );
-      }
+      if (status === 'COMPLETED') {
+        if (savedPayment.userId) {
+          await this.notificationsService.createNotification(
+            savedPayment.userId,
+            `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
+          );
+        }
 
-      if (status === 'COMPLETED' && savedPayment.userId) {
-        await this.notificationsService.createNotification(
-          savedPayment.userId,
-          `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
-        );
+        if (savedPayment.applicationId) {
+          await this.loanRepo.update(
+            { id: savedPayment.applicationId },
+            { status: ApplicationStatus.SUBMITTED }
+          );
+        }
       }
 
       return {

@@ -11,10 +11,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
-    "types": [
-      "node",
-      "jest"
-    ],
+    "types": ["node", "jest"],
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": ".",
@@ -25,9 +22,6 @@
     "paths": {
       "@app/account-management": [
         "./libs/account-management/src"
-      ],
-      "@app/admissions": [
-        "./libs/admissions/src"
       ],
       "@app/audit": [
         "./libs/audit/src"

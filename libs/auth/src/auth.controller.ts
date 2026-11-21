@@ -57,23 +57,27 @@ export class AuthController {
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
   }
-
-  @ApiOperation({
+@Post('forgot-password')
+@HttpCode(HttpStatus.OK)
+@ApiOperation({
   summary: 'Request password reset OTP',
-  description: 'Requests a one-time password reset code to be sent to the registered email address.',
+  description: 'Generates a password reset OTP and requests its delivery to the registered email address.',
+})
+@ApiBody({
+  schema: {
+    example: {
+      email: 'user@example.com',
+    },
+  },
 })
 @ApiOkResponse({
   description: 'Password reset OTP request processed successfully.',
 })
-@ApiUnauthorizedResponse({
-  description: 'The password reset request cannot be authorized.',
-})
- @Put('reset')
-@HttpCode(HttpStatus.OK)
-@ApiBody({ schema: { example: { email: 'user@example.com' } } })
-async requestOtp(@Body('email') email: string) {
-        return this.authService.requestOtp(email);
+requestOtp(@Body('email') email: string) {
+  return this.authService.requestPasswordResetOtp(email);
 }
+
+ 
 
 
 @Post('verify-email')
@@ -112,42 +116,48 @@ verifyEmail(@Body() dto: VerifyEmailDto) {
 @ApiUnauthorizedResponse({
   description: 'Invalid or expired OTP.',
 })
+
+
 @Post('reset-password')
 @HttpCode(HttpStatus.OK)
-@ApiBody({ schema: { example: { email: 'user@example.com', otp: '123456' } } })
-    async verifyOtp(@Body('email') email: string, @Body('otp') otp: string) {
-        const isValid = await this.authService.verifyOtp(email, otp);
-        if (!isValid) {
-            throw new UnauthorizedException('Invalid or expired OTP');
-        }
-        return { message: 'OTP verified successfully' };
-    }
-
-
 @ApiOperation({
-  summary: 'Set new password',
-  description: 'Sets a new password after OTP verification and password confirmation.',
+  summary: 'Reset password using OTP',
+  description:
+    'Verifies the password reset OTP and updates the users password after successful validation.',
+})
+@ApiBody({
+  schema: {
+    example: {
+      email: 'user@example.com',
+      otp: '123456',
+      newPassword: 'NewPass123!',
+      confirmPassword: 'NewPass123!',
+    },
+  },
 })
 @ApiOkResponse({
-  description: 'Password successfully updated.',
+  description: 'Password successfully reset.',
+  schema: {
+    example: {
+      message: 'Password reset successfully.',
+    },
+  },
 })
 @ApiUnauthorizedResponse({
-  description: 'Invalid or expired password reset OTP.',
+  description: 'Invalid, expired or already-used OTP.',
 })
- @Put('password')
-    @Audit({ action: AuditAction.PASSWORD_CHANGED, entity: AuditEntity.User, actorEmailFrom: 'body.email' })
-    @ApiBody({ schema: { example: { email: 'user@example.com', otp: '123456', newPassword: 'NewPass123!', confirmPassword: 'NewPass123!' } } })
-    async resetPassword(
-        @Body('email') email: string,
-        @Body('otp') otp: string,
-        @Body('newPassword') newPassword: string,
-        @Body('confirmPassword') confirmPassword: string,
-    ) {
-        if (newPassword && confirmPassword && newPassword !== confirmPassword) {
-            throw new BadRequestException('Passwords do not match');
-        }
-        return this.authService.resetPassword(email, otp, newPassword);
-    }
+async resetPassword(
+  @Body('email') email: string,
+  @Body('otp') otp: string,
+  @Body('newPassword') newPassword: string,
+  @Body('confirmPassword') confirmPassword: string,
+) {
+  if (!newPassword || !confirmPassword || newPassword !== confirmPassword) {
+    throw new BadRequestException('Passwords do not match');
+  }
+
+  return this.authService.resetPassword(email, otp, newPassword);
+}
 
 
     @ApiOperation({

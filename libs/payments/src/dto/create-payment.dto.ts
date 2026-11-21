@@ -26,12 +26,4 @@ export class CreatePaymentDto {
   @IsString()
   @IsNotEmpty()
   paymentMethod: string;
-
-  @ApiProperty({
-    description: 'Unique transaction reference from the payment provider',
-    example: 'TXN-20241027-0001',
-  })
-  @IsString()
-  @IsNotEmpty()
-  transactionReference: string;
 }
