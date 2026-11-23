@@ -28,7 +28,6 @@ export class PaymentsService {
     userId: string,
     idempotencyKey?: string,
   ) {
-    // Idempotency check — if provided, look for existing
     if (idempotencyKey) {
       const existing = await this.paymentRepository.findOne({
         where: { idempotencyKey },
@@ -120,6 +119,28 @@ export class PaymentsService {
     return updatedPayment;
   }
 
+  async uploadReceipt(paymentId: string, userId: string, filePath: string) {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId, userId },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found or does not belong to you');
+    }
+
+    payment.receiptUrl = filePath;
+    await this.paymentRepository.save(payment);
+
+    if (payment.applicationId) {
+      await this.loanRepo.update(
+        { id: payment.applicationId },
+        { status: ApplicationStatus.UNDER_REVIEW } // <-- MOVES TO UNDER_REVIEW
+      );
+    }
+
+    return { message: 'Receipt uploaded. Loan is now Under Review.' };
+  }
+
   async handleWebhook(
     payload: PaymentWebhookDto,
     signature?: string,
@@ -141,14 +162,14 @@ export class PaymentsService {
         if (savedPayment.userId) {
           await this.notificationsService.createNotification(
             savedPayment.userId,
-            `Payment confirmed via webhook. Amount: K${savedPayment.amount}`
+            `Payment confirmed via webhook. Amount: K${savedPayment.amount}. Please upload your receipt.`
           );
         }
 
         if (savedPayment.applicationId) {
           await this.loanRepo.update(
             { id: savedPayment.applicationId },
-            { status: ApplicationStatus.SUBMITTED }
+            { status: ApplicationStatus.SUBMITTED } // <-- CHANGED TO SUBMITTED
           );
         }
       }
