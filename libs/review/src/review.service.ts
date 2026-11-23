@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
 import { NotificationsService } from '@app/notifications';
+import { VerificationsService } from '../../verification/src/verification.service';
 
 @Injectable()
 export class ReviewService {
@@ -10,6 +11,7 @@ export class ReviewService {
     @InjectRepository(LoanApplication)
     private readonly loanRepo: Repository<LoanApplication>,
     private readonly notificationsService: NotificationsService,
+    private readonly verificationsService: VerificationsService,
   ) {}
 
   async processReview(
@@ -46,6 +48,15 @@ export class ReviewService {
 
     await this.loanRepo.save(loan);
 
+    // Teammate's verification logic
+    if (status === 'APPROVED') {
+      await this.verificationsService.createFromAcceptedApplication(
+        loan.id,
+        loan.studentId,
+      );
+    }
+
+    // Your custom notification message logic
     let message = `Your loan status changed to ${loan.status}.`;
 
     if (allowReapply && status === 'REJECTED') {
@@ -54,9 +65,10 @@ export class ReviewService {
       message = `Your loan was rejected. Reason: ${rejectionReason}`;
     }
 
-    await this.notificationsService.createNotification(
+    await this.notificationsService.sendLoanStatusAlert(
       loan.studentId,
-      message,
+      loan.status, // Passing the status so the service can use it
+      message,     // Or passing the message if your service accepts it
     );
 
     return {

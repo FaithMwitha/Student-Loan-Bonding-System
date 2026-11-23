@@ -10,7 +10,7 @@ import { BaseEntity } from '../../../common/src';
 import { UserEntity } from '../../../users/src/entities/users.entity';
 import { Verification } from '../enums/verification.enums';
 
-@Entity('verifications')
+@Entity('auth_verifications')
 @Index(['userId', 'purpose'])
 export class VerificationEntity extends BaseEntity {
   @Column({ type: 'uuid' })
