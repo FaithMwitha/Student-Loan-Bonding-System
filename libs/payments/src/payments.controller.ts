@@ -10,6 +10,9 @@ import {
   UseGuards,
   Req,
   Headers,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,7 +22,11 @@ import {
   ApiParam,
   ApiBody,
   ApiSecurity,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import type { Request } from 'express';
 import { JwtAuthGuard, RolesGuard, Roles } from '@app/auth';
 import { Role } from '@app/common';
@@ -27,6 +34,10 @@ import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
 import { Audit, AuditAction, AuditEntity } from '@app/audit';
+
+interface AuthRequest extends Request {
+  user: { sub: string };
+}
 
 @ApiTags('Payments')
 @ApiBearerAuth()
@@ -49,7 +60,7 @@ export class PaymentsController {
   create(
     @Body() dto: CreatePaymentDto,
     @Headers('idempotency-key') idempotencyKey: string | undefined,
-    @Req() req: { user: { sub: string } },
+    @Req() req: AuthRequest,
   ) {
     return this.paymentsService.create(dto, req.user.sub, idempotencyKey);
   }
@@ -59,7 +70,7 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get my payments' })
   @ApiResponse({ status: 200, description: 'List of payments for the authenticated user' })
   @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
-  findMyPayments(@Req() req: { user: { sub: string } }) {
+  findMyPayments(@Req() req: AuthRequest) {
     return this.paymentsService.findMyPayments(req.user.sub);
   }
 
@@ -99,6 +110,45 @@ export class PaymentsController {
     @Body('status') status: string,
   ) {
     return this.paymentsService.updateStatus(id, status);
+  }
+
+  @Post(':id/upload-receipt')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ 
+    summary: 'Upload payment receipt', 
+    description: 'Allows a student to upload the bank deposit slip after making a payment. This moves the loan to UNDER_REVIEW.' 
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ 
+    schema: {
+      type: 'object',
+      properties: {
+        receipt: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Receipt uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'No file uploaded' })
+  @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
+  @UseInterceptors(FileInterceptor('receipt', {
+    storage: diskStorage({
+      destination: './uploads/receipts',
+      filename: (req, file, callback) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        callback(null, `${uniqueSuffix}${ext}`);
+      },
+    }),
+  }))
+  uploadReceipt(
+    @Param('id') id: string,
+    @Req() req: AuthRequest, 
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No receipt file uploaded');
+    }
+    return this.paymentsService.uploadReceipt(id, req.user.sub, file.path);
   }
 
   @Post('webhook')
