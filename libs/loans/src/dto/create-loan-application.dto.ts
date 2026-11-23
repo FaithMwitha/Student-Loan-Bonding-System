@@ -7,7 +7,8 @@ import {
   Min, 
   Max,
   Matches,
-  Allow
+  Allow,
+  ValidateIf
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FundingType } from '../enums/funding-type.enum';
@@ -25,45 +26,47 @@ export class CreateLoanApplicationDto {
   @IsString()
   personalStatement?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   postalAddress?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   guarantorName?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
+  @ValidateIf((o) => o.guarantorPhone !== '' && o.guarantorPhone !== undefined)
   @Matches(/^(099|098|088|089)\d{7}$/, { message: 'Invalid phone' })
   guarantorPhone?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   guarantorAddress?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   nextOfKinName?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
+  @ValidateIf((o) => o.nextOfKinPhone !== '' && o.nextOfKinPhone !== undefined)
   @Matches(/^(099|098|088|089)\d{7}$/, { message: 'Invalid phone' })
   nextOfKinPhone?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   bankName?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   bankAccountName?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   bankAccountNumber?: string;
 
-  @ApiProperty({ example: 'string' })
+  @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
   bankBranch?: string;
 
