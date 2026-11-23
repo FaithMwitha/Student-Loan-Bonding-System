@@ -29,7 +29,6 @@ export class LoansService {
       throw new ForbiddenException('You must complete student registration before applying for a loan.');
     }
 
-    // Check for duplicate year (A student cannot apply for the SAME year twice)
     const existingLoanForYear = await this.loanRepo.findOne({
       where: { studentId: studentId, yearOfStudy: dto.yearOfStudy, status: Not(ApplicationStatus.REJECTED) },
     });
@@ -38,7 +37,10 @@ export class LoansService {
       throw new BadRequestException(`You already have an active loan application for Year ${dto.yearOfStudy}.`);
     }
 
-    // (The sequential year restriction has been removed)
+    const lastLoan = await this.loanRepo.findOne({
+      where: { studentId },
+      order: { createdAt: 'DESC' },
+    });
 
     const university = await this.universitiesService.findOneByName(profile.university);
     const UPKEEP_AMOUNT = 560000;
@@ -54,26 +56,24 @@ export class LoansService {
     }
 
     const loan = this.loanRepo.create({
-      // Loan specific (from DTO)
       yearOfStudy: dto.yearOfStudy,
-      personalStatement: dto.personalStatement,
+      personalStatement: dto.personalStatement || lastLoan?.personalStatement,
       fundingType: dto.fundingType,
       documents: documentPaths,
       amountRequested: finalAmount, 
       status: ApplicationStatus.PENDING_PAYMENT,
       
-      postalAddress: dto.postalAddress ?? undefined,
-      guarantorName: dto.guarantorName ?? undefined,
-      guarantorPhone: dto.guarantorPhone ?? undefined,
-      guarantorAddress: dto.guarantorAddress ?? undefined,
-      nextOfKinName: dto.nextOfKinName ?? undefined,
-      nextOfKinPhone: dto.nextOfKinPhone ?? undefined,
-      bankName: dto.bankName ?? undefined,
-      bankAccountName: dto.bankAccountName ?? undefined,
-      bankAccountNumber: dto.bankAccountNumber ?? undefined,
-      bankBranch: dto.bankBranch ?? undefined,
+      postalAddress: dto.postalAddress || lastLoan?.postalAddress || profile.postalAddress || undefined,
+      guarantorName: dto.guarantorName || lastLoan?.guarantorName || undefined,
+      guarantorPhone: dto.guarantorPhone || lastLoan?.guarantorPhone || undefined,
+      guarantorAddress: dto.guarantorAddress || lastLoan?.guarantorAddress || undefined,
+      nextOfKinName: dto.nextOfKinName || lastLoan?.nextOfKinName || undefined,
+      nextOfKinPhone: dto.nextOfKinPhone || lastLoan?.nextOfKinPhone || undefined,
+      bankName: dto.bankName || lastLoan?.bankName || undefined,
+      bankAccountName: dto.bankAccountName || lastLoan?.bankAccountName || undefined,
+      bankAccountNumber: dto.bankAccountNumber || lastLoan?.bankAccountNumber || undefined,
+      bankBranch: dto.bankBranch || lastLoan?.bankBranch || undefined,
 
-      // Auto-filled from Profile (Only personal details)
       studentId,
       nationalId: profile.nationalId ?? undefined,
       gender: profile.gender ?? undefined,
@@ -91,6 +91,19 @@ export class LoansService {
       ...savedLoan,
       applicantName: user.name,
     };
+  }
+
+  async resubmitApplication(id: string, studentId: string) {
+    const loan = await this.findOne(id, studentId);
+    
+    if (loan.status !== ApplicationStatus.NEEDS_CORRECTION) {
+      throw new BadRequestException('This application does not need correction.');
+    }
+
+    loan.status = ApplicationStatus.UNDER_REVIEW;
+    loan.rejectionReason = undefined;
+    
+    return this.loanRepo.save(loan);
   }
 
   async getPreviousDetails(studentId: string) {
@@ -196,8 +209,6 @@ export class LoansService {
           `You already have an active loan application for Year ${safeDto.yearOfStudy}.`
         );
       }
-
-      // (The sequential year restriction has been removed)
     }
 
     if (safeDto.yearOfStudy !== undefined) existingLoan.yearOfStudy = safeDto.yearOfStudy;
