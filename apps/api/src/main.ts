@@ -30,9 +30,9 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Student Loan Bonding System')
+      .setTitle('Student Loan Application System')
       .setDescription(
-        'API documentation for the payment and bonding modules',
+        'Official API documentation for the Student Loan Application and Bonding System. This API handles student registration, loan applications, dynamic university fee calculations, payments, and loans officer reviews.',
       )
       .setVersion('1.0')
       .addBearerAuth()
