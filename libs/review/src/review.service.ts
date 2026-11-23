@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
@@ -14,8 +14,9 @@ export class ReviewService {
 
   async processReview(
     loanId: string,
-    status: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED',
+    status: 'APPROVED' | 'REJECTED',
     rejectionReason?: string,
+    allowReapply?: boolean,
   ) {
     const loan = await this.loanRepo.findOne({
       where: { id: loanId },
@@ -25,21 +26,42 @@ export class ReviewService {
       throw new NotFoundException('Loan application not found');
     }
 
-    loan.status = status as any;
+    if (loan.status !== 'UNDER_REVIEW') {
+      throw new BadRequestException(
+        'Only loans under review can be approved or rejected.',
+      );
+    }
 
     if (status === 'REJECTED') {
       loan.rejectionReason = rejectionReason;
+
+      if (allowReapply) {
+        loan.status = 'NEEDS_CORRECTION' as any;
+      } else {
+        loan.status = 'REJECTED' as any;
+      }
+    } else {
+      loan.status = 'APPROVED' as any;
     }
 
     await this.loanRepo.save(loan);
 
-    await this.notificationsService.sendLoanStatusAlert(
+    let message = `Your loan status changed to ${loan.status}.`;
+
+    if (allowReapply && status === 'REJECTED') {
+      message = `Your loan was rejected for the following reason: ${rejectionReason}. You have a chance to make changes and reapply for this year.`;
+    } else if (status === 'REJECTED') {
+      message = `Your loan was rejected. Reason: ${rejectionReason}`;
+    }
+
+    await this.notificationsService.createNotification(
       loan.studentId,
-      status,
-      rejectionReason,
+      message,
     );
 
-    return { message: `Loan successfully marked as ${status}` };
+    return {
+      message: `Loan successfully marked as ${loan.status}`,
+    };
   }
 
   async getAllLoans() {
@@ -54,7 +76,13 @@ export class ReviewService {
 
   async getPendingLoans() {
     return this.loanRepo.find({
-      where: { status: In(['PENDING_PAYMENT', 'SUBMITTED']) as any },
+      where: {
+        status: In([
+          'PENDING_PAYMENT',
+          'SUBMITTED',
+          'UNDER_REVIEW',
+        ]) as any,
+      },
     });
   }
 
