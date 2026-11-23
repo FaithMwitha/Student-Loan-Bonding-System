@@ -133,4 +133,15 @@ export class LoansController {
   ) {
     return this.loansService.updateApplication(id, req.user.sub, dto);
   }
+
+  @Patch(':id/resubmit')
+  @ApiOperation({ 
+    summary: 'Resubmit a loan that needs correction',
+    description: 'Allows a student to submit their corrected loan application back to the review queue.'
+  })
+  @ApiResponse({ status: 200, description: 'Loan successfully resubmitted for review.' })
+  @ApiResponse({ status: 400, description: 'Application does not need correction.' })
+  resubmit(@Param('id') id: string, @Req() req: AuthRequest) {
+    return this.loansService.resubmitApplication(id, req.user.sub);
+  }
 }

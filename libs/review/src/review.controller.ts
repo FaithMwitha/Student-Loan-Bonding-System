@@ -36,7 +36,7 @@ export class ReviewController {
   @ApiOperation({
     summary: 'Approve or reject a loan application',
     description:
-      'Allows an authorized loans officer to change a loan application status to UNDER_REVIEW, APPROVED, or REJECTED.',
+      'Allows an authorized loans officer to approve or reject a loan application. When rejecting an application, the officer can allow the student to correct the application and reapply.',
   })
   @ApiParam({
     name: 'loanId',
@@ -46,7 +46,8 @@ export class ReviewController {
   })
   @ApiBody({
     type: ReviewDecisionDto,
-    description: 'Review decision details',
+    description:
+      'Review decision details, including rejection reason and whether the student is allowed to reapply.',
   })
   @ApiResponse({
     status: 200,
@@ -98,6 +99,7 @@ export class ReviewController {
       loanId,
       dto.status,
       dto.rejectionReason,
+      dto.allowReapply,
     );
   }
 
@@ -141,7 +143,7 @@ export class ReviewController {
   @ApiOperation({
     summary: 'Get pending loan applications',
     description:
-      'Retrieves loan applications whose status is PENDING_PAYMENT or SUBMITTED.',
+      'Retrieves loan applications whose status is PENDING_PAYMENT, SUBMITTED, or UNDER_REVIEW.',
   })
   @ApiResponse({
     status: 200,
