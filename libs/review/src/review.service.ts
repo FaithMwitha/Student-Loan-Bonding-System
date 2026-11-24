@@ -48,7 +48,6 @@ export class ReviewService {
 
     await this.loanRepo.save(loan);
 
-    // Teammate's verification logic
     if (status === 'APPROVED') {
       await this.verificationsService.createFromAcceptedApplication(
         loan.id,
@@ -56,7 +55,6 @@ export class ReviewService {
       );
     }
 
-    // Your custom notification message logic
     let message = `Your loan status changed to ${loan.status}.`;
 
     if (allowReapply && status === 'REJECTED') {
@@ -67,8 +65,8 @@ export class ReviewService {
 
     await this.notificationsService.sendLoanStatusAlert(
       loan.studentId,
-      loan.status, // Passing the status so the service can use it
-      message,     // Or passing the message if your service accepts it
+      loan.status,
+      message,
     );
 
     return {
@@ -96,6 +94,10 @@ export class ReviewService {
         ]) as any,
       },
     });
+  }
+
+  async getLoansNeedingCorrection() {
+    return this.getLoansByStatus('NEEDS_CORRECTION');
   }
 
   async getLoansUnderReview() {
