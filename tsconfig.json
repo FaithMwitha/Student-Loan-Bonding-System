@@ -30,8 +30,8 @@
       "@app/profile": ["./libs/profile/src"],
       "@app/review": ["./libs/review/src"],
       "@app/users": ["./libs/users/src"],
-      "@app/universities": ["./libs/universities/src"],
-      "@app/verification": ["./libs/verification/src"]
+      "@app/verification": ["./libs/verification/src"],
+      "@app/admissions": ["./libs/admissions/src"]
     }
   },
   "files": [],
