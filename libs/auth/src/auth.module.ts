@@ -10,13 +10,14 @@ import { JwtAuthGuard } from './jwt/jwtauthguard';
 import { RolesGuard } from './roles/roles.guard';
 import { UserEntity } from '../../users/src/entities/users.entity';
 import { VerificationEntity } from './entities/verification.entity';
+import { VerificationsEntity } from '../../verification/src/entities/verification.entity';
 
 @Module({
   imports: [
     ConfigModule,
     UsersModule,
     forwardRef(() => NotificationsModule), 
-    TypeOrmModule.forFeature([UserEntity, VerificationEntity]),
+    TypeOrmModule.forFeature([UserEntity, VerificationEntity,VerificationsEntity]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -8,8 +8,8 @@ import {
 
 import { VerificationStatus } from '../enums/verification-status.enum';
 
-@Entity('verifications')
-export class VerificationEntity {
+@Entity('loanss_verifications')
+export class VerificationsEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -22,15 +22,9 @@ export class VerificationEntity {
   @Column({
     type: 'enum',
     enum: VerificationStatus,
-    default: VerificationStatus.PENDING,
+    default: VerificationStatus.APPROVED,
   })
   status!: VerificationStatus;
-
-  @Column({ type: 'timestamp', nullable: true })
-  verifiedAt!: Date | null;
-
-  @Column({ type: 'text', nullable: true })
-  remarks!: string | null;
 
   @CreateDateColumn()
   createdAt!: Date;
