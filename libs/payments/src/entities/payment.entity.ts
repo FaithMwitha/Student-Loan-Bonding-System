@@ -31,4 +31,7 @@ export class Payment {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ name: 'receipt_url', nullable: true })
+  receiptUrl?: string;
 }

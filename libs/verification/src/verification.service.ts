@@ -1,22 +1,39 @@
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { VerificationEntity } from './entities/verification.entity';
+import { VerificationsEntity } from './entities/verification.entity';
 import { VerificationStatus } from './enums/verification-status.enum';
+import { University } from '../../universities/src/entities/university.entity';
+import { LoanApplication } from '../../loans/src/entities/loan-application.entity';
+import { StudentProfile } from '../../profile/src/entities/student-profile.entity';
+import { UserEntity } from '../../users/src/entities/users.entity';
 
 @Injectable()
 export class VerificationsService {
   constructor(
-    @InjectRepository(VerificationEntity)
-    private readonly verificationRepository: Repository<VerificationEntity>,
+    @InjectRepository(VerificationsEntity)
+    private readonly verificationRepository: Repository<VerificationsEntity>,
+
+    @InjectRepository(LoanApplication)
+    private readonly loanApplicationRepository: Repository<LoanApplication>,
+
+    @InjectRepository(StudentProfile)
+    private readonly studentProfileRepository: Repository<StudentProfile>,
+
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+
+    @InjectRepository(University)
+    private readonly universityRepository: Repository<University>,
   ) {}
 
   // Automatically register an accepted loan application for verification
   async createFromAcceptedApplication(
     loanApplicationId: string,
     studentId: string,
-  ): Promise<VerificationEntity> {
+  ): Promise<VerificationsEntity> {
     const existingVerification =
       await this.verificationRepository.findOne({
         where: { loanApplicationId },
@@ -30,29 +47,79 @@ export class VerificationsService {
     const verification = this.verificationRepository.create({
       loanApplicationId,
       studentId,
-      status: VerificationStatus.PENDING,
+      status: VerificationStatus.APPROVED,
     });
 
     return this.verificationRepository.save(verification);
   }
 
-  // Get all students registered for verification
-  async findAll(): Promise<VerificationEntity[]> {
-    return this.verificationRepository.find({
+  // Build a detailed verification response
+  private async buildVerificationResponse(
+    verification: VerificationsEntity,
+  ): Promise<Record<string, any>> {
+    const loanApplication =
+      await this.loanApplicationRepository.findOne({
+        where: { id: verification.loanApplicationId },
+      });
+
+    const studentId =
+      loanApplication?.studentId ?? verification.studentId;
+
+    const [studentProfile, user] = await Promise.all([
+      this.studentProfileRepository.findOne({
+        where: { userId: studentId },
+      }),
+      this.userRepository.findOne({
+        where: { id: studentId },
+      }),
+    ]);
+
+    return {
+      id: verification.id,
+      status: verification.status,
+      createdAt: verification.createdAt,
+      updatedAt: verification.updatedAt,
+
+      loanApplication: loanApplication
+        ? {
+            id: loanApplication.id,
+            university: loanApplication.university,
+            fundingType: loanApplication.fundingType,
+            amountRequested: loanApplication.amountRequested,
+            status: loanApplication.status,
+            programme: loanApplication.programme,
+            yearOfStudy: loanApplication.yearOfStudy,
+            createdAt: loanApplication.createdAt,
+          }
+        : null,
+
+      student: {
+        id: studentId,
+        name: user?.name ?? null,
+        registrationNumber:
+          studentProfile?.registrationNumber ?? null,
+        manebId: studentProfile?.manebId ?? null,
+        
+      },
+    };
+  }
+
+  // Get all approved verification records with student and loan details
+  async findAll(): Promise<Record<string, any>[]> {
+    const verifications = await this.verificationRepository.find({
+      where: { status: VerificationStatus.APPROVED },
       order: { createdAt: 'DESC' },
     });
+
+    return Promise.all(
+      verifications.map((verification) =>
+        this.buildVerificationResponse(verification),
+      ),
+    );
   }
 
-  // Get students whose verification has not started
-  async findPending(): Promise<VerificationEntity[]> {
-    return this.verificationRepository.find({
-      where: { status: VerificationStatus.PENDING },
-      order: { createdAt: 'ASC' },
-    });
-  }
-
-  // Get one verification record
-  async findOne(id: string): Promise<VerificationEntity> {
+  // Get one verification record with student and loan details
+  async findOne(id: string): Promise<Record<string, any>> {
     const verification = await this.verificationRepository.findOne({
       where: { id },
     });
@@ -61,6 +128,62 @@ export class VerificationsService {
       throw new NotFoundException('Verification record not found');
     }
 
-    return verification;
+    return this.buildVerificationResponse(verification);
   }
+// Get verification statistics by university
+async getStatisticsByUniversity(university: string) {
+  // Check whether the university exists
+  const universityRecord = await this.universityRepository.findOne({
+    where: { name: university },
+  });
+
+  if (!universityRecord) {
+    throw new NotFoundException('University not found');
+  }
+
+  const applications = await this.loanApplicationRepository.find({
+    where: { university: universityRecord.name },
+    select: { id: true,},
+  });
+
+  const applicationIds = applications.map(
+    (application) => application.id,
+  );
+
+  const counts = {
+    PENDING: 0,
+    IN_PROGRESS: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+  };
+
+  // Only query verification records if applications exist
+  if (applicationIds.length > 0) {
+    const statistics = await this.verificationRepository
+      .createQueryBuilder('verification')
+      .select('verification.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('verification.loanApplicationId IN (:...applicationIds)', {
+        applicationIds,
+      })
+      .groupBy('verification.status')
+      .getRawMany();
+
+    for (const item of statistics) {
+      counts[item.status as keyof typeof counts] = Number(item.count);
+    }
+  }
+
+  return {
+    university: universityRecord.name,
+    totalAccepted: counts.APPROVED,
+    totalPending: counts.PENDING,
+    totalInProgress: counts.IN_PROGRESS,
+    totalRejected: counts.REJECTED,
+    total: Object.values(counts).reduce(
+      (sum, count) => sum + count,
+      0,
+    ),
+  };
+}
 }

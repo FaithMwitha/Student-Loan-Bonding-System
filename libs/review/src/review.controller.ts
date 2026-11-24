@@ -1,4 +1,3 @@
-
 import {
   Controller,
   Patch,
@@ -31,12 +30,11 @@ import { Audit, AuditAction, AuditEntity } from '@app/audit';
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
-  // Approve or reject a loan application
   @Patch(':loanId')
   @ApiOperation({
     summary: 'Approve or reject a loan application',
     description:
-      'Allows an authorized loans officer to change a loan application status to UNDER_REVIEW, APPROVED, or REJECTED.',
+      'Allows an authorized loans officer to approve or reject a loan application. When rejecting an application, the officer can allow the student to correct the application and reapply.',
   })
   @ApiParam({
     name: 'loanId',
@@ -46,7 +44,8 @@ export class ReviewController {
   })
   @ApiBody({
     type: ReviewDecisionDto,
-    description: 'Review decision details',
+    description:
+      'Review decision details, including rejection reason and whether the student is allowed to reapply.',
   })
   @ApiResponse({
     status: 200,
@@ -98,10 +97,10 @@ export class ReviewController {
       loanId,
       dto.status,
       dto.rejectionReason,
+      dto.allowReapply,
     );
   }
 
-  // Get all loan applications
   @Get('loans')
   @ApiOperation({
     summary: 'Get all loan applications',
@@ -136,12 +135,11 @@ export class ReviewController {
     return this.reviewService.getAllLoans();
   }
 
-  // Get pending loans
   @Get('loans/pending')
   @ApiOperation({
     summary: 'Get pending loan applications',
     description:
-      'Retrieves loan applications whose status is PENDING_PAYMENT or SUBMITTED.',
+      'Retrieves loan applications whose status is PENDING_PAYMENT, SUBMITTED, or UNDER_REVIEW.',
   })
   @ApiResponse({
     status: 200,
@@ -172,7 +170,42 @@ export class ReviewController {
     return this.reviewService.getPendingLoans();
   }
 
-  // Get loans under review
+  @Get('loans/needs-correction')
+  @ApiOperation({
+    summary: 'Get loans that need correction',
+    description:
+      'Retrieves all loan applications that were rejected with a chance to reapply and are currently being fixed by the student.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Loans needing correction successfully retrieved',
+    schema: {
+      example: [
+        {
+          id: 'loan-123',
+          studentId: 'student-001',
+          status: 'NEEDS_CORRECTION',
+          rejectionReason: 'Missing bank account number',
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. Authentication token is missing or invalid.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only loans officers can access this endpoint.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  getLoansNeedingCorrection() {
+    return this.reviewService.getLoansNeedingCorrection();
+  }
+
   @Get('loans/under-review')
   @ApiOperation({
     summary: 'Get loans under review',
@@ -208,7 +241,6 @@ export class ReviewController {
     return this.reviewService.getLoansUnderReview();
   }
 
-  // Get rejected loans
   @Get('loans/rejected')
   @ApiOperation({
     summary: 'Get rejected loan applications',
@@ -243,7 +275,6 @@ export class ReviewController {
     return this.reviewService.getRejectedLoans();
   }
 
-  // Get accepted loans
   @Get('loans/accepted')
   @ApiOperation({
     summary: 'Get accepted loan applications',

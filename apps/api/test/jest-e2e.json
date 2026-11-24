@@ -14,13 +14,12 @@
     "^@app/profile$": "<rootDir>/../../../libs/profile/src",
     "^@app/payments$": "<rootDir>/../../../libs/payments/src",
     "^@app/review$": "<rootDir>/../../../libs/review/src",
-    "^@app/notifications$": "<rootDir>/../../../libs/notifications/src", 
-    "^@app/account-management$": "<rootDir>/../../../libs/account-management/src", 
+    "^@app/notifications$": "<rootDir>/../../../libs/notifications/src",
+    "^@app/account-management$": "<rootDir>/../../../libs/account-management/src",
     "^@app/notifications$": "<rootDir>/../../../libs/notifications/src",
     "^@app/payments$": "<rootDir>/../../../libs/payments/src",
     "^@app/review$": "<rootDir>/../../../libs/review/src",
     "^@app/verification$": "<rootDir>/../../../libs/verification/src",
-    "^@app/audit$": "<rootDir>/../../../libs/audit/src",
-    "^@app/universities": "<rootDir>/../../../libs/universities/src"
+    "^@app/admissions$": "<rootDir>/../../../libs/admissions/src"
   }
 }

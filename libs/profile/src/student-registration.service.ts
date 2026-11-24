@@ -1,55 +1,69 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { UsersService, UserResponseDto } from '@app/users';
+import { UsersService } from '@app/users';
+import { AdmissionsService } from '@app/admissions';
 import { RegisterStudentDto } from './dto/register-student.dto';
 import { StudentProfile } from './entities/student-profile.entity';
-import { toStudentProfileResponse } from './student-profile.mapper';
+import { parseDdMmYyyy } from './constants/dates';
 
 @Injectable()
 export class StudentRegistrationService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly usersService: UsersService,
+    private readonly admissions: AdmissionsService,
   ) {}
 
   async register(dto: RegisterStudentDto) {
-    if (!dto.manebId && !dto.registrationNumber) {
-      throw new BadRequestException('Provide a MANEB ID or a registration number');
-    }
+    // One message for every "no match" case, so the form can't be used to discover which IDs exist
+    const noMatch = () =>
+      new BadRequestException(
+        'We could not match those details to a selected student. Check them or contact the loans board.',
+      );
+
+    const dob = parseDdMmYyyy(dto.dateOfBirth);
+    if (!dob) throw noMatch();
+
     try {
       return await this.dataSource.transaction(async (manager) => {
+        // 1. find the roster row
+        const entry = await this.admissions.findClaimable(dto.manebId, dob, manager);
+        if (!entry) throw noMatch();
+
+        // 2. create the account
         const user = await this.usersService.createStudent(
-          { name: dto.name, email: dto.email, password: dto.password },
+          { name: `${entry.firstNames} ${entry.surname}`, email: dto.email, password: dto.password },
           manager,
         );
-        
-        const repo = manager.getRepository(StudentProfile);
-        
-        let formattedDate: Date | null = null;
-        if (dto.dateOfBirth) {
-          const [day, month, year] = dto.dateOfBirth.split('/');
-          formattedDate = new Date(`${year}-${month}-${day}`);
-        }
 
-        const profile = await repo.save(
+        // 3. claim the row (fails if someone claimed it a split second earlier)
+        if (!(await this.admissions.claim(entry.id, user.id, manager))) throw noMatch();
+
+        // 4. create the verified profile
+        const repo = manager.getRepository(StudentProfile);
+        await repo.save(
           repo.create({
             userId: user.id,
-            manebId: dto.manebId ?? null,
-            registrationNumber: dto.registrationNumber ?? null,
-            university: dto.university,
-            programme: dto.programme ?? null,
-            
-            nationalId: dto.nationalId ?? null,
-            gender: dto.gender ?? null,
-            maritalStatus: dto.maritalStatus ?? null,
-            dateOfBirth: formattedDate,
+            firstNames: entry.firstNames,
+            surname: entry.surname,
+            manebId: entry.manebId,
+            registrationNumber: entry.registrationNumber,
+            university: entry.universityName,
+            programme: entry.programme,
+            yearOfStudy: entry.yearOfStudy,
+            dateOfBirth: entry.dateOfBirth,
+            gender: entry.gender,
+            nationalId: entry.nationalIdNumber,
             phone: dto.phone ?? null,
+            identitySource: 'ADMISSIONS',
+            identityVerifiedAt: new Date(),
           }),
         );
-        
-        return toStudentProfileResponse(profile);
+
+        return { message: 'Registration successful.' };
       });
     } catch (err) {
+      if (err instanceof HttpException) throw err;
       if ((err as { code?: string }).code === '23505') {
         throw new ConflictException('That MANEB ID or registration number is already registered');
       }
