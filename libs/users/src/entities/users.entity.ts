@@ -43,6 +43,12 @@ export class UserEntity extends BaseEntity {
   })
   passwordResetExpiresAt?: Date | null;
 
+    @Column({ name: 'failed_login_attempts', type: 'int', default: 0 })
+  failedLoginAttempts!: number;
+
+  @Column({ name: 'locked_until', type: 'timestamptz', nullable: true, default: null })
+  lockedUntil?: Date | null;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   @Exclude()
   refreshTokenHash?: string;

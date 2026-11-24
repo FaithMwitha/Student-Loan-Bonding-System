@@ -31,26 +31,76 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
+  const user = await this.usersService.findByEmail(email);
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    if (user.status !== 'ACTIVE') {
-      throw new UnauthorizedException('Your account is not active');
-    }
-
-    const accessToken = await this.jwtService.signAsync({
-      sub: user.id,
-      role: user.primaryRole,
-    });
-
-    return {
-      user: this.toPublicUser(user),
-      accessToken,
-    };
+  if (!user) {
+    throw new UnauthorizedException('Invalid email or password');
   }
+
+  // 1. Check if the account is currently locked
+  if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+    const remainingMs = user.lockedUntil.getTime() - Date.now();
+    const remainingMinutes = Math.ceil(remainingMs / 60000);
+
+    throw new UnauthorizedException(
+      `Account temporarily locked. Try again in ${remainingMinutes} minute(s).`,
+    );
+  }
+
+  // 2. If the lock has expired, reset the lock and attempts
+  if (user.lockedUntil && user.lockedUntil.getTime() <= Date.now()) {
+    user.failedLoginAttempts = 0;
+    user.lockedUntil = null;
+    await this.userRepository.save(user);
+  }
+
+  // 3. Check the password
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+
+  if (!isPasswordValid) {
+    user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+
+    // 4. Lock the account after 4 failed attempts
+    if (user.failedLoginAttempts >= 4) {
+      user.lockedUntil = new Date(Date.now() + 5 * 60 * 1000);
+
+      await this.userRepository.save(user);
+
+      throw new UnauthorizedException(
+        'Too many failed login attempts. Your account is locked for 5 minutes.',
+      );
+    }
+
+    await this.userRepository.save(user);
+
+    const attemptsRemaining = 4 - user.failedLoginAttempts;
+
+    throw new UnauthorizedException(
+      `Invalid email or password. ${attemptsRemaining} attempt(s) remaining before temporary lockout.`,
+    );
+  }
+
+  // 5. Check account status
+  if (user.status !== 'ACTIVE') {
+    throw new UnauthorizedException('Your account is not active');
+  }
+
+  // 6. Successful login: reset security counters
+  user.failedLoginAttempts = 0;
+  user.lockedUntil = null;
+  await this.userRepository.save(user);
+
+  // 7. Generate JWT
+  const accessToken = await this.jwtService.signAsync({
+    sub: user.id,
+    role: user.primaryRole,
+  });
+
+  return {
+    user: this.toPublicUser(user),
+    accessToken,
+  };
+}
 
   private async generateOtp(userId: string, purpose: Verification) {
     const otpCode = randomInt(100000, 1000000).toString();
