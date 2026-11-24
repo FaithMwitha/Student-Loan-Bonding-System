@@ -63,32 +63,33 @@ export class StudentProfileService {
 
   async updateMine(userId: string, dto: UpdateStudentProfileDto) {
     const profile = await this.find(userId);
-    
+
     if (dto.manebId !== undefined) profile.manebId = dto.manebId;
     if (dto.university !== undefined) profile.university = dto.university;
     if (dto.programme !== undefined) profile.programme = dto.programme;
     if (dto.nationalId !== undefined) profile.nationalId = dto.nationalId;
     if (dto.gender !== undefined) profile.gender = dto.gender;
-    if (dto.maritalStatus !== undefined) profile.maritalStatus = dto.maritalStatus;
+    if (dto.maritalStatus !== undefined)
+      profile.maritalStatus = dto.maritalStatus;
     if (dto.phone !== undefined) profile.phone = dto.phone;
-    if (dto.postalAddress !== undefined) profile.postalAddress = dto.postalAddress;
-    if (dto.guarantorName !== undefined) profile.guarantorName = dto.guarantorName;
-    if (dto.guarantorPhone !== undefined) profile.guarantorPhone = dto.guarantorPhone;
-    if (dto.guarantorAddress !== undefined) profile.guarantorAddress = dto.guarantorAddress;
-    if (dto.nextOfKinName !== undefined) profile.nextOfKinName = dto.nextOfKinName;
-    if (dto.nextOfKinPhone !== undefined) profile.nextOfKinPhone = dto.nextOfKinPhone;
+    if (dto.postalAddress !== undefined)
+      profile.postalAddress = dto.postalAddress;
+    if (dto.guarantorName !== undefined)
+      profile.guarantorName = dto.guarantorName;
+    if (dto.guarantorPhone !== undefined)
+      profile.guarantorPhone = dto.guarantorPhone;
+    if (dto.guarantorAddress !== undefined)
+      profile.guarantorAddress = dto.guarantorAddress;
+    if (dto.nextOfKinName !== undefined)
+      profile.nextOfKinName = dto.nextOfKinName;
+    if (dto.nextOfKinPhone !== undefined)
+      profile.nextOfKinPhone = dto.nextOfKinPhone;
     if (dto.bankName !== undefined) profile.bankName = dto.bankName;
-    if (dto.bankAccountName !== undefined) profile.bankAccountName = dto.bankAccountName;
-    if (dto.bankAccountNumber !== undefined) profile.bankAccountNumber = dto.bankAccountNumber;
+    if (dto.bankAccountName !== undefined)
+      profile.bankAccountName = dto.bankAccountName;
+    if (dto.bankAccountNumber !== undefined)
+      profile.bankAccountNumber = dto.bankAccountNumber;
     if (dto.bankBranch !== undefined) profile.bankBranch = dto.bankBranch;
-
-    if (dto.dateOfBirth !== undefined) {
-      const [day, month, year] = dto.dateOfBirth.split('/');
-      const parsedDate = new Date(`${year}-${month}-${day}`);
-      if (!isNaN(parsedDate.getTime())) {
-        profile.dateOfBirth = parsedDate;
-      }
-    }
 
     if (dto.name !== undefined) {
       await this.usersService.updateName(userId, dto.name);
