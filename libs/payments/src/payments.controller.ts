@@ -96,22 +96,6 @@ export class PaymentsController {
     return this.paymentsService.findOne(id);
   }
 
-  @Patch(':id/status')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Update payment status (Admin only)' })
-  @ApiParam({ name: 'id', description: 'Payment UUID' })
-  @ApiResponse({ status: 200, description: 'Status updated' })
-  @ApiResponse({ status: 401, description: 'Unauthorized — valid JWT required' })
-  @ApiResponse({ status: 403, description: 'Forbidden — admin role required' })
-  @ApiResponse({ status: 404, description: 'Payment not found' })
-  updateStatus(
-    @Param('id') id: string,
-    @Body('status') status: string,
-  ) {
-    return this.paymentsService.updateStatus(id, status);
-  }
-
   @Post(':id/upload-receipt')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ 
