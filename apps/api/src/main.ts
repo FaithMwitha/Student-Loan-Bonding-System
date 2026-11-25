@@ -9,7 +9,6 @@ import { ApiModule } from './api.module';
 dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
-  // Changed to NestExpressApplication
   const app = await NestFactory.create<NestExpressApplication>(ApiModule, {
     rawBody: true,
   });
@@ -42,8 +41,12 @@ async function bootstrap() {
 
     SwaggerModule.setup('docs', app, document, {
       swaggerOptions: {
-        tagsSorter: 'alpha',
+        tagsSorter: (a: string, b: string) => {
+          if (a === b) return 0;
+          return a.toLowerCase() > b.toLowerCase() ? 1 : -1;
+        },
         operationsSorter: 'alpha',
+        persistAuthorization: true,
       },
     });
   }
