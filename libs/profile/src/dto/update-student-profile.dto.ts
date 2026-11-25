@@ -96,6 +96,7 @@ export class UpdateStudentProfileDto {
   @ApiPropertyOptional({ example: 'string' })
   @IsOptional()
   @IsString()
+  @Matches(/^\d{8,16}$/, { message: 'Bank account number must be between 8 and 16 digits and contain only numbers.' })
   bankAccountNumber?: string;
 
   @ApiPropertyOptional({ example: 'string' })
