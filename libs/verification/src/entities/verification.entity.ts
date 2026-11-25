@@ -13,6 +13,9 @@ export class VerificationsEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  userId?: string;
+
   @Column({ type: 'uuid', unique: true, nullable: true })
   loanApplicationId?: string;
 
