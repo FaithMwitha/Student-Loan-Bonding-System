@@ -1,7 +1,24 @@
 import {
-  Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Req, UseGuards,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { 
+  ApiBearerAuth, 
+  ApiOperation, 
+  ApiTags, 
+  ApiResponse, 
+  ApiParam,
+  ApiBody
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { Role } from '@app/common';
 import { JwtAuthGuard, RolesGuard, Roles } from '@app/auth';
@@ -22,9 +39,18 @@ interface AuthRequest extends Request {
 export class AccountManagementController {
   constructor(private readonly service: AccountManagementService) {}
 
-  @ApiOperation({ summary: 'Create a new officer account' })
   @Post('officers')
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ 
+    summary: 'Create a new officer account',
+    description: 'Allows an Admin to create a new Loans Officer account. The officer will receive an email with their login credentials.'
+  })
+  @ApiBody({ type: CreateOfficerDto })
+  @ApiResponse({ status: 201, description: 'Officer account created successfully.' })
+  @ApiResponse({ status: 400, description: 'Bad Request: Invalid input data.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized: Missing or invalid JWT token.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only Admins can perform this action.' })
+  @ApiResponse({ status: 409, description: 'Conflict: An officer with that email or staff number already exists.' })
   @Audit({
     action: AuditAction.OFFICER_ACCOUNT_CREATED,
     entity: AuditEntity.User,
@@ -34,14 +60,44 @@ export class AccountManagementController {
     return this.service.createOfficer(dto);
   }
 
-  @ApiOperation({ summary: 'Get user information' })
+  @Get('officers')
+  @ApiOperation({ 
+    summary: 'Get all loans officers',
+    description: 'Retrieves a list of all registered Loans Officers in the system.'
+  })
+  @ApiResponse({ status: 200, description: 'List of officers retrieved successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized: Missing or invalid JWT token.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only Admins can perform this action.' })
+  getAllOfficers() {
+    return this.service.getAllOfficers();
+  }
+
   @Get('users/:id')
+  @ApiOperation({ 
+    summary: 'Get user information',
+    description: 'Retrieves the account details and status of any user (Student, Officer, or Admin) by their ID.'
+  })
+  @ApiParam({ name: 'id', description: 'UUID of the user', type: String })
+  @ApiResponse({ status: 200, description: 'User details retrieved successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized: Missing or invalid JWT token.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only Admins can perform this action.' })
+  @ApiResponse({ status: 404, description: 'Not Found: User with the given ID does not exist.' })
   getUser(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.getUser(id);
   }
 
-  @ApiOperation({ summary: 'Update user account status' })
   @Patch('users/:id/status')
+  @ApiOperation({ 
+    summary: 'Update user account status',
+    description: 'Allows an Admin to activate or deactivate a user account. Inactive accounts cannot log in.'
+  })
+  @ApiParam({ name: 'id', description: 'UUID of the user', type: String })
+  @ApiBody({ type: UpdateAccountStatusDto })
+  @ApiResponse({ status: 200, description: 'User status successfully updated.' })
+  @ApiResponse({ status: 400, description: 'Bad Request: Invalid status value or trying to change own status.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized: Missing or invalid JWT token.' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Only Admins can perform this action.' })
+  @ApiResponse({ status: 404, description: 'Not Found: User with the given ID does not exist.' })
   @Audit({
     action: AuditAction.ACCOUNT_STATUS_CHANGED,
     entity: AuditEntity.User,
