@@ -65,6 +65,9 @@ export class UsersService {
     return this.createWithRole(dto, Role.LOANS_OFFICER, manager);
   }
 
+    async findUsersByRole(role: Role): Promise<UserEntity[]> {
+    return this.userRepository.find({ where: { primaryRole: role } });
+  }
   async findById(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {

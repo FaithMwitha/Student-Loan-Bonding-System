@@ -64,6 +64,8 @@ export class CreateLoanApplicationDto {
 
   @ApiProperty({ required: false, example: 'string' })
   @IsOptional() @IsString()
+  @ValidateIf((o) => o.bankAccountNumber !== '' && o.bankAccountNumber !== undefined)
+  @Matches(/^\d{8,16}$/, { message: 'Bank account number must be between 8 and 16 digits and contain only numbers.' })
   bankAccountNumber?: string;
 
   @ApiProperty({ required: false, example: 'string' })

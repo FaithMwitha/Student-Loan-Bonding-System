@@ -1,8 +1,9 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { AccountStatus } from '@app/common';
+import { AccountStatus, Role } from '@app/common';
 import { UserResponseDto, UsersService } from '@app/users';
 import { StaffProfileService } from '@app/profile';
+import { NotificationsService } from '../../notifications/src/notifications.service';
 import { CreateOfficerDto } from './dto/create-officer.dto';
 
 @Injectable()
@@ -11,11 +12,17 @@ export class AccountManagementService {
     private readonly dataSource: DataSource,
     private readonly users: UsersService,
     private readonly staff: StaffProfileService,
+    private readonly notificationsService: NotificationsService,
   ) {}
+
+  async getAllOfficers() {
+    const officers = await this.users.findUsersByRole(Role.LOANS_OFFICER);
+    return officers.map((officer) => UserResponseDto.from(officer));
+  }
 
   async createOfficer(dto: CreateOfficerDto) {
     try {
-      return await this.dataSource.transaction(async (manager) => {
+      const result = await this.dataSource.transaction(async (manager) => {
         const user = await this.users.createOfficer(
           { name: dto.name, email: dto.email, password: dto.password },
           manager,
@@ -30,6 +37,16 @@ export class AccountManagementService {
           },
         };
       });
+
+      const emailMessage = `Hello ${dto.name}, you have been appointed as a Loans Officer. Your login email is ${dto.email} and your temporary password is ${dto.password}. Please log in and change your password immediately.`;
+      
+      await this.notificationsService.send(
+        dto.email,
+        'Welcome to the Loan Board - Your Account is Ready',
+        emailMessage,
+      );
+
+      return result;
     } catch (err) {
       if ((err as { code?: string }).code === '23505') {
         throw new ConflictException('An officer with that staff number already exists');
